@@ -70,6 +70,8 @@ func (h Server) Start() {
 				err := limiter.Wait(context.Background())
 				if err != nil {
 					log.Printf("%s : %s\n", pattern, err)
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
 				}
 
 				if h.Web == true {
@@ -95,8 +97,8 @@ func (h Server) Start() {
 				if h.UserAgent != "" && route.Pattern.UserAgent == Enable {
 					acc := header.Get("User-Agent")
 					if acc != h.UserAgent {
-						log.Printf("%s : %s\n", pattern, "User-Agent 错误")
-						w.WriteHeader(http.StatusForbidden)
+						errStr := fmt.Sprintf("%s : %s\n", pattern, "User-Agent 错误")
+						http.Error(w, errStr, http.StatusForbidden)
 						return
 					}
 				}
@@ -106,8 +108,8 @@ func (h Server) Start() {
 				if route.Pattern.Auth == Enable {
 					//有认证必须要校验签名
 					if sig == "" {
-						log.Printf("%s : %s\n", pattern, "缺少数据签名")
-						w.WriteHeader(http.StatusForbidden)
+						errStr := fmt.Sprintf("%s : %s\n", pattern, "缺少数据签名")
+						http.Error(w, errStr, http.StatusForbidden)
 						return
 					}
 				}
@@ -132,8 +134,8 @@ func (h Server) Start() {
 					//TODO 论证这里会不会有错
 					paramByte, err = json.Marshal(m)
 					if err != nil {
-						log.Printf("%s : %s\n", pattern, "读取url参数错误")
-						w.WriteHeader(http.StatusInternalServerError)
+						errStr := fmt.Sprintf("%s : %s\n", pattern, "读取url参数错误")
+						http.Error(w, errStr, http.StatusInternalServerError)
 						return
 					}
 				} else {
@@ -141,8 +143,8 @@ func (h Server) Start() {
 					r.Body = http.MaxBytesReader(w, r.Body, int64(h.MaxPayloadBytes))
 					paramByte, err = ioutil.ReadAll(r.Body)
 					if err != nil {
-						log.Printf("%s : %s\n", pattern, "读取body错误")
-						w.WriteHeader(http.StatusRequestEntityTooLarge)
+						errStr := fmt.Sprintf("%s : %s\n", pattern, "读取body错误")
+						http.Error(w, errStr, http.StatusRequestEntityTooLarge)
 						return
 					}
 				}
@@ -155,14 +157,14 @@ func (h Server) Start() {
 						a := &auth{}
 						err = json.Unmarshal(paramByte, a)
 						if err != nil {
-							log.Printf("%s : %s\n", pattern, err)
-							w.WriteHeader(http.StatusInternalServerError)
+							errStr := fmt.Sprintf("%s : %s\n", pattern, err)
+							http.Error(w, errStr, http.StatusInternalServerError)
 							return
 						}
 
 						if a.Token == "" {
-							log.Printf("%s : %s\n", pattern, "缺少令牌")
-							w.WriteHeader(http.StatusNotAcceptable)
+							errStr := fmt.Sprintf("%s : %s\n", pattern, "缺少令牌")
+							http.Error(w, errStr, http.StatusNotAcceptable)
 							return
 						}
 
@@ -170,8 +172,8 @@ func (h Server) Start() {
 						tk := token.Token{}
 						err = tk.Decode(a.Token)
 						if err != nil {
-							log.Printf("%s : %s\n", pattern, "令牌错误")
-							w.WriteHeader(http.StatusNotAcceptable)
+							errStr := fmt.Sprintf("%s : %s\n", pattern, "令牌错误")
+							http.Error(w, errStr, http.StatusNotAcceptable)
 							return
 						}
 
@@ -180,13 +182,13 @@ func (h Server) Start() {
 
 						//校验签名
 						if !cipher.CheckHmacSha256(paramByte, sig, ak) {
-							log.Printf("%s : %s\n", pattern, "指纹检验失败")
-							w.WriteHeader(http.StatusNotAcceptable)
+							errStr := fmt.Sprintf("%s : %s\n", pattern, "指纹检验失败")
+							http.Error(w, errStr, http.StatusNotAcceptable)
 							return
 						}
 					} else {
-						log.Printf("%s : %s\n", pattern, "body为空")
-						w.WriteHeader(http.StatusNoContent)
+						errStr := fmt.Sprintf("%s : %s\n", pattern, "body为空")
+						http.Error(w, errStr, http.StatusNoContent)
 						return
 					}
 				}
@@ -206,8 +208,8 @@ func (h Server) Start() {
 				// 通用不格式直接写出
 				if route.Pattern.General == Enable {
 					if err != nil {
-						log.Printf("%s : %s\n", pattern, err)
-						w.WriteHeader(http.StatusInternalServerError)
+						errStr := fmt.Sprintf("%s : %s\n", pattern, err)
+						http.Error(w, errStr, http.StatusInternalServerError)
 						return
 					}
 
@@ -220,8 +222,8 @@ func (h Server) Start() {
 					switch value := result.(type) {
 					case []byte:
 					default:
-						log.Printf("%v is not []byte or []uint8", value)
-						w.WriteHeader(http.StatusInternalServerError)
+						errStr := fmt.Sprintf("%v is not []byte or []uint8", value)
+						http.Error(w, errStr, http.StatusInternalServerError)
 						return
 					}
 
@@ -260,10 +262,10 @@ func (h Server) Start() {
 					})
 				}
 
-				//错误
+				//json错误
 				if err != nil {
-					log.Printf("%s : %s\n", pattern, err)
-					w.WriteHeader(http.StatusInternalServerError)
+					errStr := fmt.Sprintf("%s : %s\n", pattern, err)
+					http.Error(w, errStr, http.StatusInternalServerError)
 					return
 				}
 

@@ -9,5 +9,12 @@ func TestInfo(t *testing.T) {
 		Node: 1,
 	}.CreateNode()
 
-	t.Log(SId.String())
+	for i := 0; i < 100; i++ {
+		//生成字符串id
+		s := SId.String()
+		t.Log(s)
+		//转整型
+		id := SId.ToInt(s)
+		t.Log(id)
+	}
 }

@@ -2,7 +2,7 @@
 package id
 
 import (
-	cipher "basic/cipher"
+	"basic/cipher"
 	"basic/color"
 	"fmt"
 	"github.com/bwmarrin/snowflake"
@@ -20,10 +20,6 @@ type server struct {
 
 //String 获取string id
 func (s server) String() string {
-	return s.ToString(s.Int())
-}
-
-func (s server) String1() string {
 	return s.ToString(s.Int())
 }
 

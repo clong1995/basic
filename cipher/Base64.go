@@ -37,7 +37,8 @@ func Base64DecryptBytesInt(base64Str string) int64 {
 		return 0
 	}
 
-	if len(buf) < 7 {
+	if len(buf) < 8 {
+		log.Println("buf len < 8")
 		return 0
 	}
 	return int64(binary.LittleEndian.Uint64(buf))
