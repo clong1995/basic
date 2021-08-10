@@ -8,8 +8,8 @@ func TestServer_CreateClient(t *testing.T) {
 	Server{
 		Endpoint:        "onsmqtt.cn-beijing.aliyuncs.com",
 		InstanceId:      "post-cn-i7m264v5w0g",
-		AccessKeyId:     "LTAI5tALrttqkSihLzveGWbY",
-		AccessKeySecret: "JS51wRMUDof9jr4tN55ADEO6eAZkyw",
+		AccessKeyId:     "",
+		AccessKeySecret: "",
 	}.CreateServer()
 	/*deviceCredential, err := Mqtt.Register("GID_dating", "dating-server")
 	if err != nil {
