@@ -1,0 +1,137 @@
+package logistic
+
+import (
+	"basic/color"
+	"crypto/md5"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"strings"
+)
+
+const url string = "https://api.kdniao.com/Ebusiness/EbusinessOrderHandle.aspx"
+
+var Logistic *server
+
+type Trace struct {
+	Station string `json:"AcceptStation"`
+	Time    string `json:"AcceptTime"`
+}
+
+type result struct {
+	LogisticCode string  `json:"LogisticCode"`
+	ShipperCode  string  `json:"ShipperCode"`
+	Traces       []Trace `json:"Traces"`
+	State        string  `json:"State"`
+	EBusinessID  string  `json:"EBusinessID"`
+	Success      bool    `json:"Success"`
+}
+
+type server struct {
+	eBusinessID string
+	apiKey      string
+}
+
+func (s server) Traces(shipperCode, LogisticCode string) ([]Trace, error) {
+	// 组装应用级参数
+	RequestData := "{" +
+		"'CustomerName': ''," +
+		"'OrderCode': ''," +
+		"'ShipperCode': '" + shipperCode + "'," +
+		"'LogisticCode': '" + LogisticCode + "'," +
+		"}"
+
+	dataSign, err := getSign(RequestData, s.apiKey)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	// 组装系统级参数
+	v := map[string]string{
+		"RequestType": "1002",
+		"EBusinessID": s.eBusinessID,
+		"DataType":    "2",
+		"RequestData": RequestData,
+		"DataSign":    dataSign,
+	}
+	bytes, err := post(url, v)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	//log.Println(string(bytes))
+	res := new(result)
+	err = json.Unmarshal(bytes, res)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	ts := res.Traces
+	for i, j := 0, len(ts)-1; i < j; i, j = i+1, j-1 {
+		ts[i], ts[j] = ts[j], ts[i]
+	}
+	return ts, nil
+}
+
+func base64Encode(src []byte) []byte {
+	return []byte(base64.StdEncoding.EncodeToString(src))
+}
+
+func getSign(n, apiKey string) (string, error) {
+	str := n + apiKey
+	w := md5.New()
+	_, err := io.WriteString(w, str)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+	md5str := fmt.Sprintf("%x", w.Sum(nil))
+	debyte := base64Encode([]byte(md5str))
+	return fmt.Sprintf("%s", debyte), nil
+} //签名
+
+func post(url string, params map[string]string) ([]byte, error) {
+	var values []string
+	for k, v := range params {
+		values = append(values, fmt.Sprintf("%s=%s", k, v))
+	}
+	resp, err := http.Post(url, "application/x-www-form-urlencoded", strings.NewReader(strings.Join(values, "&")))
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("StatusCode == %d", resp.StatusCode)
+		log.Println(err)
+		return nil, err
+	}
+	contentBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return contentBytes, nil
+}
+
+type Server struct {
+	EBusinessID string
+	ApiKey      string
+}
+
+func (s Server) CreateClient() {
+	//防止多次创建
+	if Logistic != nil {
+		return
+	}
+	//创建对象
+	Logistic = &server{
+		eBusinessID: s.EBusinessID,
+		apiKey:      s.ApiKey,
+	}
+	color.Success("[logistic] kdniao create client success")
+}
