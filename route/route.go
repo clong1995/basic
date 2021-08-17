@@ -55,10 +55,11 @@ type IpHandle func(string, string, []byte) (interface{}, error)
 
 // Route 一个路由的结构
 type Route struct {
-	Url      string
-	Pattern  Pattern
-	handle   Handle
-	ipHandle IpHandle
+	Url         string
+	ContentType string
+	Pattern     Pattern
+	handle      Handle
+	ipHandle    IpHandle
 }
 
 func (r Route) Register(handle Handle) {

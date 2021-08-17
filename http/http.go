@@ -226,7 +226,9 @@ func (h Server) Start() {
 						http.Error(w, errStr, http.StatusInternalServerError)
 						return
 					}
-
+					if route.ContentType != "" {
+						w.Header().Set("Content-Type", route.ContentType)
+					}
 					w.WriteHeader(http.StatusOK)
 					_, err = w.Write(result.([]byte))
 

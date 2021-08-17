@@ -13,16 +13,17 @@ import (
 	"strings"
 )
 
-const url string = "https://api.kdniao.com/Ebusiness/EbusinessOrderHandle.aspx"
+const traceUrl string = "https://api.kdniao.com/Ebusiness/EbusinessOrderHandle.aspx"
+const subscribeUrl string = "https://api.kdniao.com/api/dist"
 
 var Logistic *server
 
 type Trace struct {
-	Station string `json:"AcceptStation"`
-	Time    string `json:"AcceptTime"`
+	AcceptStation string `json:"AcceptStation"`
+	AcceptTime    string `json:"AcceptTime"`
 }
 
-type result struct {
+type tracesResult struct {
 	LogisticCode string  `json:"LogisticCode"`
 	ShipperCode  string  `json:"ShipperCode"`
 	Traces       []Trace `json:"Traces"`
@@ -31,11 +32,19 @@ type result struct {
 	Success      bool    `json:"Success"`
 }
 
+type subscribeResult struct {
+	ShipperCode string `json:"ShipperCode"`
+	UpdateTime  string `json:"UpdateTime"`
+	EBusinessID string `json:"EBusinessID"`
+	Success     bool   `json:"Success"`
+}
+
 type server struct {
 	eBusinessID string
 	apiKey      string
 }
 
+// Traces 实时查询接口
 func (s server) Traces(shipperCode, LogisticCode string) ([]Trace, error) {
 	// 组装应用级参数
 	RequestData := "{" +
@@ -58,23 +67,65 @@ func (s server) Traces(shipperCode, LogisticCode string) ([]Trace, error) {
 		"RequestData": RequestData,
 		"DataSign":    dataSign,
 	}
-	bytes, err := post(url, v)
+	bytes, err := post(traceUrl, v)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 	//log.Println(string(bytes))
-	res := new(result)
+	res := new(tracesResult)
 	err = json.Unmarshal(bytes, res)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 	ts := res.Traces
+	//逆向结果
 	for i, j := 0, len(ts)-1; i < j; i, j = i+1, j-1 {
 		ts[i], ts[j] = ts[j], ts[i]
 	}
 	return ts, nil
+}
+
+// Subscribe 订阅接口
+func (s server) Subscribe(shipperCode, LogisticCode, Callback string) error {
+	// 组装应用级参数
+	RequestData := "{" +
+		"'Callback':'" + Callback + "'," +
+		"'ShipperCode': '" + shipperCode + "'," +
+		"'LogisticCode': '" + LogisticCode + "'," +
+		//"'CustomerName':'1234'," + //CustomerName字段: ShipperCode为SF时必填，对应寄件人/收件人手机号后四位；ShipperCode为其他快递时，可不填或保留字段，不可传值
+		"}"
+	dataSign, err := getSign(RequestData, s.apiKey)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	// 组装系统级参数
+	v := map[string]string{
+		"RequestType": "1008",
+		"EBusinessID": s.eBusinessID,
+		"DataType":    "2",
+		"RequestData": RequestData,
+		"DataSign":    dataSign,
+	}
+	bytes, err := post(subscribeUrl, v)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	res := new(subscribeResult)
+	err = json.Unmarshal(bytes, res)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	if res.Success != true {
+		err = fmt.Errorf(string(bytes))
+		log.Println(err)
+		return err
+	}
+	return nil
 }
 
 func base64Encode(src []byte) []byte {
@@ -119,8 +170,9 @@ func post(url string, params map[string]string) ([]byte, error) {
 }
 
 type Server struct {
-	EBusinessID string
-	ApiKey      string
+	EBusinessID  string
+	ApiKey       string
+	CallbackAddr string
 }
 
 func (s Server) CreateClient() {
@@ -133,5 +185,5 @@ func (s Server) CreateClient() {
 		eBusinessID: s.EBusinessID,
 		apiKey:      s.ApiKey,
 	}
-	color.Success("[logistic] kdniao create client success")
+	color.Success(fmt.Sprintf("[logistic] kdniao create client success,callback addr %s,\n<快递鸟>免费版仅支持 申通、圆通、百世、天天,有效期半年.", s.CallbackAddr))
 }
