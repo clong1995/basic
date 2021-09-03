@@ -33,7 +33,7 @@ func (r route) Put(route Route) {
 	}
 	if route.Pattern.UserAgent == None { // User-Agent
 		// 默认不实用User-Agent
-		route.Pattern.UserAgent = UserAgentDisable
+		route.Pattern.UserAgent = Enable
 	}
 	if route.Pattern.General == None { // 通用模式
 		//默认不使用通用模式

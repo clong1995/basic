@@ -58,9 +58,10 @@ func (s server) Send(phone, signName, templateCode string) (err error) {
 	}
 
 	if tea.StringValue(resp.Body.Code) == "OK" {
-		return
+
 	} else {
 		err = fmt.Errorf("dysms err %v", resp.Body.Message)
+		return
 	}
 
 	//保存
