@@ -2,9 +2,9 @@ package mysql
 
 import (
 	"basic/cipher"
+	"basic/fieldCopy"
 	"database/sql"
 	"fmt"
-	"github.com/ulule/deepcopier"
 	"log"
 	"reflect"
 	"time"
@@ -239,7 +239,7 @@ func RespScan(rows *sql.Rows, field, resp interface{}) (err error) {
 		log.Println(err)
 		return
 	}
-	err = FieldFrom(resp, field)
+	err = fieldCopy.FieldFrom(resp, field)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -257,14 +257,4 @@ func b2s(bs []uint8) string {
 
 func modelErr(name, modelType, dataType, field string, val interface{}) error {
 	return fmt.Errorf("model %s type is %s, table %s type is %s. value is %v", name, modelType, field, dataType, val)
-}
-
-// FieldCopy 从src深度拷贝实例到dc中
-func FieldCopy(src, dc interface{}) error {
-	return deepcopier.Copy(src).To(dc)
-}
-
-// FieldFrom 从src深度拷贝实例到dc中
-func FieldFrom(dc, src interface{}) error {
-	return deepcopier.Copy(dc).From(src)
 }

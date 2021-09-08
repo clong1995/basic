@@ -22,28 +22,15 @@ type server struct {
 	bucketName string
 }
 
-/*// PutSignURL 签名直传
-func (s server) PutSignURL() (fileId string, url string, err error) {
-	fileId = id.SId.String()
-	//url, err = bucket.SignURL(fileId, oss.HTTPPut, 60)
-	url, err = bucket.SignURL(fileId, oss.HTTPPut, 60)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	return
+type UploadUrl struct {
+	Url            string `json:"url"`
+	OSSAccessKeyId string `json:"OSSAccessKeyId"`
+	Policy         string `json:"policy"`
+	Signature      string `json:"signature"`
+	Key            string `json:"key"`
 }
-// PutSignFileIdURL 签名直传
-func (s server) PutSignFileIdURL(fId string) (url string, err error) {
-	url, err = bucket.SignURL(fId, oss.HTTPPut, 60)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	return
-}*/
 
-func (s server) PutSignFileIdURL(fId string) (param map[string]string, err error) {
+func (s server) PutSignPolicyFileIdURL(fId string) (url UploadUrl, err error) {
 	policy := map[string]interface{}{
 		"expiration": time.Now().Add(60 * time.Second).Format("2006-01-02T15:04:05.999Z"),
 		"conditions": []interface{}{
@@ -55,6 +42,7 @@ func (s server) PutSignFileIdURL(fId string) (param map[string]string, err error
 	}
 	policyBytes, err := json.Marshal(&policy)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 	policyStr := base64.StdEncoding.EncodeToString(policyBytes)
@@ -62,15 +50,24 @@ func (s server) PutSignFileIdURL(fId string) (param map[string]string, err error
 	h := hmac.New(sha1.New, []byte(ossClient.Config.AccessKeySecret))
 	_, err = io.WriteString(h, policyStr)
 	if err != nil {
+		log.Println(err)
 		return
 	}
-	return map[string]string{
-		"url":            "https://" + s.bucketName + "." + ossClient.Config.Endpoint,
-		"OSSAccessKeyId": ossClient.Config.AccessKeyID,
-		"policy":         policyStr,
-		"signature":      base64.StdEncoding.EncodeToString(h.Sum(nil)),
-		"key":            fId,
-	}, nil
+	url.Url = "https://" + s.bucketName + "." + ossClient.Config.Endpoint
+	url.OSSAccessKeyId = ossClient.Config.AccessKeyID
+	url.Policy = policyStr
+	url.Signature = base64.StdEncoding.EncodeToString(h.Sum(nil))
+	url.Key = fId
+	return
+}
+
+func (s server) PutSignFileIdURL(fId string) (url string, err error) {
+	url, err = bucket.SignURL(fId, oss.HTTPPut, 60)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	return
 }
 
 // GetSignURL TODO 未测试，很大可能有问题。
@@ -92,7 +89,9 @@ func (s server) GetURL(name string) string {
 	if name == "" {
 		return ""
 	}
-	return fmt.Sprintf("https://%s.%s/%s", bucket.BucketName, ossClient.Config.Endpoint, name)
+	scheme := "https"
+	netLoc := ossClient.Config.Endpoint[len(scheme+"://"):]
+	return fmt.Sprintf("%s://%s.%s/%s", scheme, bucket.BucketName, netLoc, name)
 }
 
 type Server struct {
@@ -123,5 +122,5 @@ func (s Server) CreateClient() {
 	Oss = &server{
 		bucketName: s.BucketName,
 	}
-	color.Success(fmt.Sprintf("[oss] open %s %s handle success", s.Endpoint, s.BucketName))
+	color.Success(fmt.Sprintf("[oss] open %s/%s handle success", s.Endpoint, s.BucketName))
 }
