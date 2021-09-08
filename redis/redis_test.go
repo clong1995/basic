@@ -4,8 +4,8 @@ import "testing"
 
 func Test_server_SetStruct(t *testing.T) {
 	Server{
-		Addr:     "redis-13579.c278.us-east-1-4.ec2.cloud.redislabs.com:13579",
-		Password: "clong11429ycl.YU",
+		Addr:     "",
+		Password: "",
 		DB:       0,
 	}.Connect()
 
