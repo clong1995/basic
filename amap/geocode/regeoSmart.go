@@ -56,7 +56,7 @@ type ReGeoSmartRes struct {
 	Aoi              AoiSmart  `json:"aoi"`
 }
 
-func ReGeoSmart(key, location string) (err error, res ReGeoSmartRes) {
+func ReGeoSmart(key, location string) (res ReGeoSmartRes, err error) {
 	resBytes, err := request.HttpGet("https://restapi.amap.com/v3/geocode/regeo", map[string]string{
 		"key":        key,
 		"location":   location,
@@ -99,5 +99,5 @@ func ReGeoSmart(key, location string) (err error, res ReGeoSmartRes) {
 		res.Aoi = resp.ReGeocode.Aois[0]
 	}
 
-	return nil, res
+	return
 }

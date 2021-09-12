@@ -98,7 +98,7 @@ type Aoi struct {
 	Distance string `json:"distance"` //道路到请求坐标的距离
 }
 
-func ReGeo(key, location string) (err error, reGeocodes ReGeocode) {
+func ReGeo(key, location string) (reGeocodes ReGeocode, err error) {
 	resBytes, err := request.HttpGet("https://restapi.amap.com/v3/geocode/regeo", map[string]string{
 		"key":        key,
 		"location":   location,
@@ -120,5 +120,5 @@ func ReGeo(key, location string) (err error, reGeocodes ReGeocode) {
 		log.Println(err)
 		return
 	}
-	return nil, resp.ReGeocode
+	return resp.ReGeocode, nil
 }

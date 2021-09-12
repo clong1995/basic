@@ -38,7 +38,7 @@ type GeoRes struct {
 	Location         string `json:"location"` //坐标
 }
 
-func Geo(key, address string) (err error, res GeoRes) {
+func Geo(key, address string) (res GeoRes, err error) {
 	resBytes, err := request.HttpGet("https://restapi.amap.com/v3/geocode/geo", map[string]string{
 		"key":     key,
 		"address": address,

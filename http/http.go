@@ -96,7 +96,7 @@ func (h Server) Start() {
 				header := r.Header
 				if h.UserAgent != "" && route.Pattern.UserAgent == Enable {
 					acc := header.Get("User-Agent")
-					if acc != h.UserAgent {
+					if acc != "dev tool" && acc != h.UserAgent {
 						errStr := fmt.Sprintf("%s : %s\n", pattern, "User-Agent 错误")
 						log.Println(errStr)
 						http.Error(w, errStr, http.StatusForbidden)

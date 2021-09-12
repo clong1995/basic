@@ -24,7 +24,7 @@ type SearchPoi struct {
 	Address  string `json:"address"`  //
 }
 
-func Search(key, keywords, region string) (err error, res []SearchPoi) {
+func Search(key, keywords, region string) (res []SearchPoi, err error) {
 	resBytes, err := request.HttpGet("https://restapi.amap.com/v5/place/text", map[string]string{
 		"key":      key,
 		"keywords": keywords,
@@ -48,5 +48,5 @@ func Search(key, keywords, region string) (err error, res []SearchPoi) {
 		return
 	}
 
-	return nil, resp.Pois
+	return resp.Pois, nil
 }
