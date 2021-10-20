@@ -56,6 +56,7 @@ type ReGeoSmartRes struct {
 	Aoi              AoiSmart  `json:"aoi"`
 }
 
+// location "经,纬"
 func ReGeoSmart(key, location string) (res ReGeoSmartRes, err error) {
 	resBytes, err := request.HttpGet("https://restapi.amap.com/v3/geocode/regeo", map[string]string{
 		"key":        key,
@@ -75,7 +76,7 @@ func ReGeoSmart(key, location string) (res ReGeoSmartRes, err error) {
 	}
 	if resp.Status != "1" {
 		err = errors.New(resp.Info)
-		log.Println(err)
+		log.Println(resp)
 		return
 	}
 	res.FormattedAddress = resp.ReGeocode.FormattedAddress

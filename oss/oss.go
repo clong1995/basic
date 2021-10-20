@@ -3,6 +3,8 @@ package oss
 
 import (
 	"basic/color"
+	"basic/id"
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
@@ -11,6 +13,8 @@ import (
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"io"
 	"log"
+	"net/http"
+	"strings"
 	"time"
 )
 
@@ -94,6 +98,47 @@ func (s server) GetURL(name string) string {
 	return fmt.Sprintf("%s://%s.%s/%s", scheme, bucket.BucketName, netLoc, name)
 }
 
+// UploadBase64 上传base64
+func (s server) UploadBase64(value string) (string, error) {
+	sId := id.SId.String()
+	fileContentPosition := strings.Index(value, ",")
+	uploadBaseString := value[fileContentPosition+1:]
+	decodeString, err := base64.StdEncoding.DecodeString(uploadBaseString)
+	if err != nil {
+		return "", err
+	}
+	buf := bytes.NewBuffer(decodeString)
+	err = bucket.PutObject(sId, buf)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+	return s.GetURL(sId), nil
+}
+
+func (s server) UploadUrl(url string) (string, error) {
+	sId := id.SId.String()
+	res, err := http.Get(url)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(res.Body)
+
+	err = bucket.PutObject(sId, res.Body)
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+
+	return s.GetURL(sId), nil
+}
+
 type Server struct {
 	Endpoint        string
 	AccessKeyId     string
@@ -114,6 +159,7 @@ func (s Server) CreateClient() {
 
 	// 获取存储空间。
 	bucket, err = ossClient.Bucket(s.BucketName)
+
 	if err != nil {
 		log.Fatalln(color.Red, err, color.Reset)
 	}

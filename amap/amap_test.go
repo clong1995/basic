@@ -8,7 +8,7 @@ func Test_server_Geo(t *testing.T) {
 	Server{
 		WebKey: "",
 	}.CreateClient()
-	err, res := Amap.Geo("北京市市辖区")
+	res, err := Amap.Geo("北京市市辖区")
 	if err != nil {
 		return
 	}
@@ -19,7 +19,7 @@ func Test_server_ReGeo(t *testing.T) {
 	Server{
 		WebKey: "",
 	}.CreateClient()
-	err, res := Amap.ReGeo("116.405281,39.904987")
+	res, err := Amap.ReGeo("116.405281,39.904987")
 	if err != nil {
 		return
 	}
@@ -30,7 +30,7 @@ func Test_server_ReGeoSmart(t *testing.T) {
 	Server{
 		WebKey: "",
 	}.CreateClient()
-	err, res := Amap.ReGeoSmart("120.633647,31.298091")
+	res, err := Amap.ReGeoSmart("120.633647,31.298091")
 	if err != nil {
 		return
 	}
