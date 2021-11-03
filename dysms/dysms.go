@@ -3,15 +3,14 @@ package dysms
 import (
 	"basic/color"
 	"basic/random"
-	"fmt"
 
 	//"basic/random"
+	"fmt"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/client"
 	dysmsapi20170525 "github.com/alibabacloud-go/dysmsapi-20170525/v2/client"
 	"github.com/alibabacloud-go/tea/tea"
 	"log"
 	"time"
-	//"fmt"
 )
 
 type codeMsg struct {
@@ -26,7 +25,7 @@ var Dysms *server
 var dysmsClient *dysmsapi20170525.Client
 var dict = make(map[string]codeMsg)
 
-func (s server) Send(phone, signName, templateCode string) (err error) {
+func (s server) Send(phone, signName, templateCode string, showCode bool) (err error) {
 	now := time.Now()
 
 	//删除过期的
@@ -44,6 +43,10 @@ func (s server) Send(phone, signName, templateCode string) (err error) {
 
 	//验证码
 	code := random.NumberNotZeroStart(6)
+
+	if showCode {
+		log.Println(code)
+	}
 	//发送
 	sendSmsRequest := &dysmsapi20170525.SendSmsRequest{
 		PhoneNumbers:  tea.String(phone),
@@ -53,7 +56,7 @@ func (s server) Send(phone, signName, templateCode string) (err error) {
 	}
 	resp, err := dysmsClient.SendSms(sendSmsRequest)
 	if err != nil {
-		fmt.Print(err.Error())
+		println(err)
 		return
 	}
 
@@ -81,6 +84,7 @@ func (s server) Check(phone, code string) (result bool) {
 			delete(dict, p)
 		}
 	}
+
 	if value, ok := dict[phone]; ok {
 		//判断验证码
 		if value.code == code {

@@ -44,14 +44,17 @@ func FieldScan(rows *sql.Rows, field interface{}) (err error) {
 	}
 
 	valueOfModule = reflect.Indirect(valueOfModule)
+
 	typeOfModule := valueOfModule.Type()
 
 	for i := 0; i < valueOfModule.NumField(); i++ {
 		//定义的tag
-		field := typeOfModule.Field(i).Tag.Get("field")
+		fieldName := typeOfModule.Field(i).Tag.Get("field")
+
+		//TODO 嵌入的复合结构体没法处理
 
 		//包含要处理的field
-		if item, ok := mapValue[field]; ok {
+		if item, ok := mapValue[fieldName]; ok {
 			vfi := valueOfModule.Field(i)
 			if vfi.CanSet() && item != nil {
 				//检查模型和数据的类型是否对应
@@ -74,7 +77,7 @@ func FieldScan(rows *sql.Rows, field interface{}) (err error) {
 						vfi.SetString(cipher.Base64EncryptInt64(item.(int64)))
 						break
 					default:
-						return fmt.Errorf(`table %s is key mast be BIGINT`, field)
+						return fmt.Errorf(`table %s is key mast be BIGINT`, fieldName)
 					}
 					continue
 				}
@@ -94,7 +97,7 @@ func FieldScan(rows *sql.Rows, field interface{}) (err error) {
 						vfi.SetString(fmtData)
 						break
 					default:
-						return fmt.Errorf(`table %s is dateFormat mast be datatime`, field)
+						return fmt.Errorf(`table %s is dateFormat mast be datatime`, fieldName)
 					}
 					continue
 				}
@@ -104,49 +107,49 @@ func FieldScan(rows *sql.Rows, field interface{}) (err error) {
 				switch val := item.(type) {
 				case int:
 					if modelType != "int" {
-						return modelErr(name, modelType, "int", field, val)
+						return modelErr(name, modelType, "int", fieldName, val)
 					}
 					vfi.SetInt(int64(item.(int)))
 					break
 				case uint:
 					if modelType != "uint" {
-						return modelErr(name, modelType, "uint", field, val)
+						return modelErr(name, modelType, "uint", fieldName, val)
 					}
 					vfi.SetUint(uint64(item.(uint)))
 					break
 				case int8:
 					if modelType != "int8" {
-						return modelErr(name, modelType, "int8", field, val)
+						return modelErr(name, modelType, "int8", fieldName, val)
 					}
 					vfi.SetInt(int64(item.(int8)))
 					break
 				case uint8:
 					if modelType != "uint8" {
-						return modelErr(name, modelType, "uint8", field, val)
+						return modelErr(name, modelType, "uint8", fieldName, val)
 					}
 					vfi.SetUint(uint64(item.(uint8)))
 					break
 				case int16:
 					if modelType != "int16" {
-						return modelErr(name, modelType, "int16", field, val)
+						return modelErr(name, modelType, "int16", fieldName, val)
 					}
 					vfi.SetInt(int64(item.(int16)))
 					break
 				case uint16:
 					if modelType != "uint16" {
-						return modelErr(name, modelType, "uint16", field, val)
+						return modelErr(name, modelType, "uint16", fieldName, val)
 					}
 					vfi.SetUint(uint64(item.(uint16)))
 					break
 				case int32:
 					if modelType != "int32" {
-						return modelErr(name, modelType, "int32", field, val)
+						return modelErr(name, modelType, "int32", fieldName, val)
 					}
 					vfi.SetInt(int64(item.(int32)))
 					break
 				case uint32:
 					if modelType != "uint32" {
-						return modelErr(name, modelType, "uint32", field, val)
+						return modelErr(name, modelType, "uint32", fieldName, val)
 					}
 					vfi.SetUint(uint64(item.(uint32)))
 					break
@@ -156,70 +159,72 @@ func FieldScan(rows *sql.Rows, field interface{}) (err error) {
 					} else if modelType == "bool" {
 						vfi.Set(reflect.ValueOf(item.(int64) != 0))
 					} else {
-						return modelErr(name, modelType, "int64/bool", field, val)
+						return modelErr(name, modelType, "int64/bool", fieldName, val)
 					}
 					break
 				case uint64:
 					if modelType != "uint64" {
-						return modelErr(name, modelType, "uint64", field, val)
+						return modelErr(name, modelType, "uint64", fieldName, val)
 					}
 					vfi.SetUint(uint64(item.(int64)))
 					break
 				case float32:
 					if modelType != "float32" {
-						return modelErr(name, modelType, "float32", field, val)
+						return modelErr(name, modelType, "float32", fieldName, val)
 					}
 					vfi.SetFloat(float64(item.(float32)))
 					break
 				case float64:
 					if modelType != "float64" {
-						return modelErr(name, modelType, "float64", field, val)
+						return modelErr(name, modelType, "float64", fieldName, val)
 					}
 					vfi.SetFloat(item.(float64))
 					break
 				case string:
 					if modelType != "string" {
-						return modelErr(name, modelType, "string", field, val)
+						return modelErr(name, modelType, "string", fieldName, val)
 					}
 					vfi.SetString(item.(string))
 					break
 				case bool:
 					if modelType != "bool" {
-						return modelErr(name, modelType, "bool", field, val)
+						return modelErr(name, modelType, "bool", fieldName, val)
 					}
 					itemBool := item.(bool)
 					vfi.Set(reflect.ValueOf(&itemBool))
 					break
 				case []uint8:
 					if modelType != "string" {
-						return modelErr(name, modelType, "string", field, val)
+						return modelErr(name, modelType, "string", fieldName, val)
 					}
 					vfi.SetString(b2s(item.([]uint8)))
 					break
 				case complex64:
 					if modelType != "complex64" {
-						return modelErr(name, modelType, "complex64", field, val)
+						return modelErr(name, modelType, "complex64", fieldName, val)
 					}
 					itemComplex64 := item.(complex64)
 					vfi.Set(reflect.ValueOf(&itemComplex64))
 					break
 				case complex128:
 					if modelType != "complex128" {
-						return modelErr(name, modelType, "complex128", field, val)
+						return modelErr(name, modelType, "complex128", fieldName, val)
 					}
 					itemComplex128 := item.(complex128)
 					vfi.Set(reflect.ValueOf(&itemComplex128))
 					break
 				case time.Time: //原始时间格式
 					if vfi.Type().String() != "time.Time" {
-						return modelErr(name, modelType, "time.Time", field, val)
+						return modelErr(name, modelType, "time.Time", fieldName, val)
 					}
 					itemTime := item.(time.Time)
 					vfi.Set(reflect.ValueOf(itemTime))
 					break
 				default:
-					return modelErr(name, modelType, "unKnow", field, val)
+					return modelErr(name, modelType, "unKnow", fieldName, val)
 				}
+			} else {
+				log.Println("vfi can`t set or item is nil")
 			}
 		}
 	}
@@ -239,6 +244,7 @@ func RespScan(rows *sql.Rows, field, resp interface{}) (err error) {
 		log.Println(err)
 		return
 	}
+
 	err = fieldCopy.FieldFrom(resp, field)
 	if err != nil {
 		log.Println(err)
