@@ -178,7 +178,7 @@ func (s *server) PaySign(body, openID, spbillCreateIp string, totalFee int) (sig
 		PaySign:    md5str,
 	}, nil
 }
-func (s Server) CreateClient() {
+func (s Server) Run() {
 	//防止多次创建
 	if Wx != nil {
 		return

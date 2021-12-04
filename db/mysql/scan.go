@@ -90,8 +90,8 @@ func FieldScan(rows *sql.Rows, field interface{}) (err error) {
 					//检查是time
 					switch item.(type) {
 					case time.Time:
-						fmtData := item.(time.Time).Format("2006-01-02 15:04:05")
-						if fmtData == "1000-01-01 00:00:00" {
+						fmtData := item.(time.Time).Format("2006-01-02 15:04:05.000")
+						if fmtData == "1000-01-01 00:00:00.000" {
 							fmtData = ""
 						}
 						vfi.SetString(fmtData)

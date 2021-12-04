@@ -47,14 +47,14 @@ func AesDecrypt(crypt, key []byte) ([]byte, error) {
 	return orig, nil
 }
 
-//补码
+//pKCS7Padding 补码
 func pKCS7Padding(orig []byte, blockSize int) []byte {
 	padding := blockSize - len(orig)%blockSize
 	padText := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(orig, padText...)
 }
 
-//去码
+//pKCS7UnPadding 去码
 func pKCS7UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unPadding := int(origData[length-1])

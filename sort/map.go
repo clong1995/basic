@@ -18,7 +18,7 @@ func (s itemSliceDESC) Len() int           { return len(s) }
 func (s itemSliceDESC) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s itemSliceDESC) Less(i, j int) bool { return s[i].Value > s[j].Value }
 
-//正序
+//mapValueASC 正序
 func mapValueASC(m map[string]int64) {
 	is := make(itemSliceASC, len(m))
 	for s, i := range m {
@@ -30,7 +30,7 @@ func mapValueASC(m map[string]int64) {
 	sort.Stable(is)
 }
 
-//倒序
+//mapValueDESC 倒序
 func mapValueDESC(m map[string]int64) {
 	is := make(itemSliceDESC, len(m))
 	for s, i := range m {

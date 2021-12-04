@@ -72,8 +72,8 @@ func (s server) TxQueryProc(tx *sql.Tx, procName string, args ...interface{}) (*
 	return tx.Query(sqlQuery, values...)
 }
 
-// Connect 连接数据库
-func (s Server) Connect() {
+// Run 连接数据库
+func (s Server) Run() {
 	//防止多次创建
 	if Mysql != nil {
 		return
@@ -105,7 +105,10 @@ func argsData(args []interface{}) (sqlArgs string, values []interface{}) {
 			v := reflect.ValueOf(arg)
 			for i := 0; i < v.NumField(); i++ {
 				name := t.Field(i).Name
-				if strings.HasSuffix(name, "Id") {
+				/*if strings.HasSuffix(name, "Id") {//排除结尾为Id的字段
+					continue
+				}*/
+				if name == "Id" { //排除Id的字段
 					continue
 				}
 				values = append(values, v.Field(i).Interface())

@@ -14,6 +14,9 @@ var Page *server
 type server struct {
 }
 
+type Server struct {
+}
+
 // Doc 获取页面
 func (s server) Doc(url string, selector string) (string, error) {
 
@@ -61,10 +64,7 @@ func (s server) Doc(url string, selector string) (string, error) {
 	return htmlContent, nil
 }
 
-type Server struct {
-}
-
-func (s Server) CreateServer() {
+func (s Server) Run() {
 	//防止多次创建
 	if Page != nil {
 		return

@@ -76,7 +76,7 @@ func (s server) Del(key string, keys ...string) (count int64, err error) {
 	return
 }
 
-func (s Server) Connect() {
+func (s Server) Run() {
 	if Redis != nil {
 		return
 	}

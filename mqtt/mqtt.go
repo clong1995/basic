@@ -30,6 +30,13 @@ type server struct {
 	accessKeyId string
 }
 
+type Server struct {
+	Endpoint        string
+	InstanceId      string
+	AccessKeyId     string
+	AccessKeySecret string
+}
+
 type CommonDeviceCredential struct {
 	RequestId             *string
 	UpdateTime            *int64
@@ -127,7 +134,7 @@ func (s server) TokenRevoke(token string) {
 	log.Println(result)
 }
 
-//拼接ClientId
+//ClientId 拼接ClientId
 func ClientId(groupId, deviceId string) *string {
 	return tea.String(fmt.Sprintf(`%s@@@%s`, groupId, deviceId))
 }
@@ -267,14 +274,7 @@ func (s server) AuthRegister(groupId, deviceId string) (_auth *auth, err error) 
 	}, nil
 }
 
-type Server struct {
-	Endpoint        string
-	InstanceId      string
-	AccessKeyId     string
-	AccessKeySecret string
-}
-
-func (s Server) CreateServer() {
+func (s Server) Run() {
 	if Mqtt != nil {
 		return
 	}

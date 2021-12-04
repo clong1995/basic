@@ -3,9 +3,9 @@ package http
 import (
 	"basic/cipher"
 	"basic/color"
+	. "basic/http/route"
 	"basic/id"
 	"basic/ip"
-	. "basic/route"
 	"basic/token"
 	"context"
 	"encoding/json"
@@ -39,17 +39,40 @@ type response struct {
 type Server struct {
 	Addr            string        //监听地址
 	MaxPayloadBytes int           //最大消息长度
-	MaxHeaderBytes  int           //最head息长度
-	Every           time.Duration //速度(毫秒)
-	Bursts          int           //流量(个)
+	MaxHeaderBytes  int           //最大head息长度
+	Every           time.Duration //时间(毫秒)
+	Bursts          int           //个数(个)
 	ReadTimeout     time.Duration //读超时
 	WriteTimeout    time.Duration //写超时
-	Web             bool          //是否是用于web
+	Web             bool          //是否是用于web，跨域
 	UserAgent       string        //允许的UserAgent
 }
 
-// Start 启动服务
-func (h Server) Start() {
+// Run 启动服务
+func (h Server) Run() {
+
+	//当不配置的时候，使用以下默认配置
+	if h.Addr == "" {
+		h.Addr = ":80"
+	}
+	if h.MaxPayloadBytes == 0 {
+		h.MaxPayloadBytes = 1 << 20
+	}
+	if h.MaxHeaderBytes == 0 {
+		h.MaxHeaderBytes = 1 << 20
+	}
+	if h.Every == 0 {
+		h.Every = 1 * time.Second
+	}
+	if h.Bursts == 0 {
+		h.Every = 100
+	}
+	if h.ReadTimeout == 0 {
+		h.ReadTimeout = 10 * time.Second
+	}
+	if h.WriteTimeout == 0 {
+		h.ReadTimeout = 10 * time.Second
+	}
 
 	mux := http.NewServeMux()
 
@@ -310,28 +333,6 @@ func (h Server) Start() {
 		}(s, r)
 	}
 
-	//当不配置的时候，使用以下默认配置
-	if h.Addr == "" {
-		h.Addr = ":80"
-	}
-	if h.MaxPayloadBytes == 0 {
-		h.MaxPayloadBytes = 1 << 20
-	}
-	if h.MaxHeaderBytes == 0 {
-		h.MaxHeaderBytes = 1 << 20
-	}
-	if h.Every == 0 {
-		h.Every = 10 * time.Millisecond
-	}
-	if h.Bursts == 0 {
-		h.Every = 2
-	}
-	if h.ReadTimeout == 0 {
-		h.ReadTimeout = 10 * time.Second
-	}
-	if h.WriteTimeout == 0 {
-		h.ReadTimeout = 10 * time.Second
-	}
 	color.Success(fmt.Sprintf("[http] %s listening %s", h.UserAgent, h.Addr))
 	//启动服务
 	server := &http.Server{

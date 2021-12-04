@@ -55,7 +55,7 @@ func AddGlobalSubscribe(callback SubscribeCallback) {
 	fmt.Printf("Received message: %s from topic: %s\n", msg.Payload(), msg.Topic())
 }*/
 
-func (s Client) CreateClient() error {
+func (s Client) Run() error {
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("mqtt://%s:%d", s.Broker, s.Port))
 	opts.SetClientID(s.Id)

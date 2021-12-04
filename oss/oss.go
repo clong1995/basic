@@ -26,6 +26,13 @@ type server struct {
 	bucketName string
 }
 
+type Server struct {
+	Endpoint        string
+	AccessKeyId     string
+	AccessKeySecret string
+	BucketName      string
+}
+
 type UploadUrl struct {
 	Url            string `json:"url"`
 	OSSAccessKeyId string `json:"OSSAccessKeyId"`
@@ -139,14 +146,7 @@ func (s server) UploadUrl(url string) (string, error) {
 	return s.GetURL(sId), nil
 }
 
-type Server struct {
-	Endpoint        string
-	AccessKeyId     string
-	AccessKeySecret string
-	BucketName      string
-}
-
-func (s Server) CreateClient() {
+func (s Server) Run() {
 	if Oss != nil {
 		return
 	}

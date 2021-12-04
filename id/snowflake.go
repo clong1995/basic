@@ -18,6 +18,10 @@ var sNode *snowflake.Node
 type server struct {
 }
 
+type Server struct {
+	Node int64
+}
+
 //String 获取string id
 func (s server) String() string {
 	return s.ToString(s.Int())
@@ -68,11 +72,7 @@ func (s server) Encrypt(idStr string) (interface{}, error) {
 	return cipher.Base64EncryptInt64(int64Num), nil
 }
 
-type Server struct {
-	Node int64
-}
-
-func (s Server) CreateNode() {
+func (s Server) Run() {
 	//防止多次创建
 	if SId != nil {
 		return

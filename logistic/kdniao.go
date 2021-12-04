@@ -44,6 +44,12 @@ type server struct {
 	apiKey      string
 }
 
+type Server struct {
+	EBusinessID  string
+	ApiKey       string
+	CallbackAddr string
+}
+
 // Traces 实时查询接口
 func (s server) Traces(shipperCode, LogisticCode string) ([]Trace, error) {
 	// 组装应用级参数
@@ -169,13 +175,7 @@ func post(url string, params map[string]string) ([]byte, error) {
 	return contentBytes, nil
 }
 
-type Server struct {
-	EBusinessID  string
-	ApiKey       string
-	CallbackAddr string
-}
-
-func (s Server) CreateClient() {
+func (s Server) Run() {
 	//防止多次创建
 	if Logistic != nil {
 		return

@@ -182,7 +182,7 @@ func nlpRequest() (req *requests.CommonRequest) {
 	return
 }
 
-func (s Server) CreateServer() {
+func (s Server) Run() {
 	//防止多次创建
 	if NLP != nil {
 		return

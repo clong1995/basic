@@ -74,7 +74,7 @@ func (s *server) Decrypt(loginToken string) (phone string, err error) {
 	return string(decrypt), nil
 }
 
-func (s Server) CreateClient() {
+func (s Server) Run() {
 	//防止多次创建
 	if Jverify != nil {
 		return

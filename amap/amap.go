@@ -29,12 +29,12 @@ func (s server) ReGeoSmart(location string) (res geocode.ReGeoSmartRes, err erro
 	return geocode.ReGeoSmart(s.server.WebKey, location)
 }
 
-//Search
+//Search 搜索
 func (s server) Search(keywords, region string) (res []geocode.SearchPoi, err error) {
 	return geocode.Search(s.server.WebKey, keywords, region)
 }
 
-func (s Server) CreateClient() {
+func (s Server) Run() {
 	//防止多次创建
 	if Amap != nil {
 		return

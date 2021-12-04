@@ -21,6 +21,11 @@ type codeMsg struct {
 type server struct {
 }
 
+type Server struct {
+	AccessKeyId     string
+	AccessKeySecret string
+}
+
 var Dysms *server
 var dysmsClient *dysmsapi20170525.Client
 var dict = make(map[string]codeMsg)
@@ -96,13 +101,7 @@ func (s server) Check(phone, code string) (result bool) {
 	return
 }
 
-type Server struct {
-	RegionId        string
-	AccessKeyId     string
-	AccessKeySecret string
-}
-
-func (s Server) CreateClient() {
+func (s Server) Run() {
 	if Dysms != nil {
 		return
 	}
