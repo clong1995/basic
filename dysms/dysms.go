@@ -13,22 +13,24 @@ import (
 	"time"
 )
 
-type codeMsg struct {
-	code       string
-	expiration time.Time
-}
+type (
+	Server struct {
+		AccessKeyId     string
+		AccessKeySecret string
+	}
+	codeMsg struct {
+		code       string
+		expiration time.Time
+	}
+	server struct {
+	}
+)
 
-type server struct {
-}
-
-type Server struct {
-	AccessKeyId     string
-	AccessKeySecret string
-}
-
-var Dysms *server
-var dysmsClient *dysmsapi20170525.Client
-var dict = make(map[string]codeMsg)
+var (
+	Dysms       *server
+	dysmsClient *dysmsapi20170525.Client
+	dict        = make(map[string]codeMsg)
+)
 
 func (s server) Send(phone, signName, templateCode string, showCode bool) (err error) {
 	now := time.Now()

@@ -13,42 +13,42 @@ import (
 	"strings"
 )
 
-const traceUrl string = "https://api.kdniao.com/Ebusiness/EbusinessOrderHandle.aspx"
-const subscribeUrl string = "https://api.kdniao.com/api/dist"
+type (
+	Trace struct {
+		AcceptStation string `json:"AcceptStation"`
+		AcceptTime    string `json:"AcceptTime"`
+	}
+	Server struct {
+		EBusinessID  string
+		ApiKey       string
+		CallbackAddr string
+	}
+	tracesResult struct {
+		LogisticCode string  `json:"LogisticCode"`
+		ShipperCode  string  `json:"ShipperCode"`
+		Traces       []Trace `json:"Traces"`
+		State        string  `json:"State"`
+		EBusinessID  string  `json:"EBusinessID"`
+		Success      bool    `json:"Success"`
+	}
+	subscribeResult struct {
+		ShipperCode string `json:"ShipperCode"`
+		UpdateTime  string `json:"UpdateTime"`
+		EBusinessID string `json:"EBusinessID"`
+		Success     bool   `json:"Success"`
+	}
+	server struct {
+		eBusinessID string
+		apiKey      string
+	}
+)
+
+const (
+	traceUrl     string = "https://api.kdniao.com/Ebusiness/EbusinessOrderHandle.aspx"
+	subscribeUrl string = "https://api.kdniao.com/api/dist"
+)
 
 var Logistic *server
-
-type Trace struct {
-	AcceptStation string `json:"AcceptStation"`
-	AcceptTime    string `json:"AcceptTime"`
-}
-
-type tracesResult struct {
-	LogisticCode string  `json:"LogisticCode"`
-	ShipperCode  string  `json:"ShipperCode"`
-	Traces       []Trace `json:"Traces"`
-	State        string  `json:"State"`
-	EBusinessID  string  `json:"EBusinessID"`
-	Success      bool    `json:"Success"`
-}
-
-type subscribeResult struct {
-	ShipperCode string `json:"ShipperCode"`
-	UpdateTime  string `json:"UpdateTime"`
-	EBusinessID string `json:"EBusinessID"`
-	Success     bool   `json:"Success"`
-}
-
-type server struct {
-	eBusinessID string
-	apiKey      string
-}
-
-type Server struct {
-	EBusinessID  string
-	ApiKey       string
-	CallbackAddr string
-}
 
 // Traces 实时查询接口
 func (s server) Traces(shipperCode, LogisticCode string) ([]Trace, error) {

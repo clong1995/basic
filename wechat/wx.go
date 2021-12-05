@@ -20,45 +20,47 @@ import (
 	"time"
 )
 
-var Wx *server
-
 var (
+	Wx                     *server
 	ErrInvalidBlockSize    = errors.New("invalid block size")
 	ErrInvalidPKCS7Data    = errors.New("invalid PKCS7 data")
 	ErrInvalidPKCS7Padding = errors.New("invalid padding on input")
 )
 
-type server struct {
-	server Server
-}
-type wXLoginResp struct {
-	OpenId     string `json:"openid"`
-	SessionKey string `json:"session_key"`
-	UnionId    string `json:"unionid"`
-	ErrCode    int    `json:"errcode"`
-	ErrMsg     string `json:"errmsg"`
-}
-type wxUserInfo struct {
-	OpenID          string `json:"openId"`
-	UnionID         string `json:"unionId"`
-	PhoneNumber     string `json:"phoneNumber"`
-	PurePhoneNumber string `json:"purePhoneNumber"`
-	CountryCode     string `json:"countryCode"`
-	NickName        string `json:"nickName"`
-	Gender          int64  `json:"gender"`
-	City            string `json:"city"`
-	Province        string `json:"province"`
-	Country         string `json:"country"`
-	AvatarURL       string `json:"avatarUrl"`
-	Language        string `json:"language"`
-	Watermark       struct {
-		Timestamp int64  `json:"timestamp"`
-		AppID     string `json:"appid"`
-	} `json:"watermark"`
-}
-type Server struct {
-	AppID, SecretKey, PayKey, MchId, PayNotifyUrl string
-}
+type (
+	Server struct {
+		AppID, SecretKey, PayKey, MchId, PayNotifyUrl string
+	}
+	server struct {
+		server Server
+	}
+	wXLoginResp struct {
+		OpenId     string `json:"openid"`
+		SessionKey string `json:"session_key"`
+		UnionId    string `json:"unionid"`
+		ErrCode    int    `json:"errcode"`
+		ErrMsg     string `json:"errmsg"`
+	}
+	wxUserInfo struct {
+		OpenID          string `json:"openId"`
+		UnionID         string `json:"unionId"`
+		PhoneNumber     string `json:"phoneNumber"`
+		PurePhoneNumber string `json:"purePhoneNumber"`
+		CountryCode     string `json:"countryCode"`
+		NickName        string `json:"nickName"`
+		Gender          int64  `json:"gender"`
+		City            string `json:"city"`
+		Province        string `json:"province"`
+		Country         string `json:"country"`
+		AvatarURL       string `json:"avatarUrl"`
+		Language        string `json:"language"`
+		Watermark       struct {
+			Timestamp int64  `json:"timestamp"`
+			AppID     string `json:"appid"`
+		} `json:"watermark"`
+	}
+)
+
 type unifiedorderData struct {
 	XMLName        struct{} `xml:"xml"`
 	AppId          string   `xml:"appid"`
@@ -139,7 +141,7 @@ func (s *server) WXLogin(code string) (*wXLoginResp, error) {
 	// 解析http请求中body 数据到我们定义的结构体中
 	wxResp := wXLoginResp{}
 	decoder := json.NewDecoder(resp.Body)
-	if err := decoder.Decode(&wxResp); err != nil {
+	if err = decoder.Decode(&wxResp); err != nil {
 		return nil, err
 	}
 

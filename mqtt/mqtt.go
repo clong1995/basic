@@ -15,37 +15,39 @@ import (
 	"time"
 )
 
-var Mqtt *server
-var mqttServer *onsmqtt20200420.Client
+type (
+	Server struct {
+		Endpoint        string
+		InstanceId      string
+		AccessKeyId     string
+		AccessKeySecret string
+	}
+	CommonDeviceCredential struct {
+		RequestId             *string
+		UpdateTime            *int64
+		DeviceAccessKeyId     *string
+		CreateTime            *int64
+		InstanceId            *string
+		DeviceAccessKeySecret *string
+		ClientId              *string
+	}
+	auth struct {
+		ClientId   string `json:"client_id"`
+		Username   string `json:"username"`
+		Password   string `json:"password"`
+		ExpireTime int64  `json:"expire_time"`
+	}
 
-type auth struct {
-	ClientId   string `json:"client_id"`
-	Username   string `json:"username"`
-	Password   string `json:"password"`
-	ExpireTime int64  `json:"expire_time"`
-}
+	server struct {
+		instanceId  *string
+		accessKeyId string
+	}
+)
 
-type server struct {
-	instanceId  *string
-	accessKeyId string
-}
-
-type Server struct {
-	Endpoint        string
-	InstanceId      string
-	AccessKeyId     string
-	AccessKeySecret string
-}
-
-type CommonDeviceCredential struct {
-	RequestId             *string
-	UpdateTime            *int64
-	DeviceAccessKeyId     *string
-	CreateTime            *int64
-	InstanceId            *string
-	DeviceAccessKeySecret *string
-	ClientId              *string
-}
+var (
+	Mqtt       *server
+	mqttServer *onsmqtt20200420.Client
+)
 
 // ClientsInfo 查询设备信息
 func (s server) ClientsInfo(clientIdList ...string) {

@@ -7,7 +7,7 @@ func Test_server_SetStruct(t *testing.T) {
 		Addr:     "",
 		Password: "",
 		DB:       0,
-	}.Connect()
+	}.Run()
 
 	type data struct {
 		Name        string `json:"name"`
@@ -29,7 +29,7 @@ func Test_server_GetStruct(t *testing.T) {
 		Addr:     "redis-13579.c278.us-east-1-4.ec2.cloud.redislabs.com:13579",
 		Password: "clong11429ycl.YU",
 		DB:       0,
-	}.Connect()
+	}.Run()
 
 	type data struct {
 		Name        string `json:"name"`
@@ -50,7 +50,7 @@ func Test_server_ExistsStruct(t *testing.T) {
 		Addr:     "redis-13579.c278.us-east-1-4.ec2.cloud.redislabs.com:13579",
 		Password: "clong11429ycl.YU",
 		DB:       0,
-	}.Connect()
+	}.Run()
 	exists, err := Redis.ExistsStruct("testData", "user")
 	if err != nil {
 		t.Log(err)
@@ -64,7 +64,7 @@ func Test_server_Del(t *testing.T) {
 		Addr:     "redis-13579.c278.us-east-1-4.ec2.cloud.redislabs.com:13579",
 		Password: "clong11429ycl.YU",
 		DB:       0,
-	}.Connect()
+	}.Run()
 	count, err := Redis.Del("testData", "user")
 	if err != nil {
 		t.Log(err)

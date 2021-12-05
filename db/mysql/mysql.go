@@ -10,16 +10,19 @@ import (
 	"strings"
 )
 
-type server struct {
-}
+type (
+	Server struct {
+		DataSource string
+		MaxOpen    int
+	}
+	server struct {
+	}
+)
 
-type Server struct {
-	DataSource string
-	MaxOpen    int
-}
-
-var Mysql *server
-var mysqlDB *sql.DB
+var (
+	Mysql   *server
+	mysqlDB *sql.DB
+)
 
 // TxBegin 开启事物
 func (s server) TxBegin() (*sql.Tx, error) {

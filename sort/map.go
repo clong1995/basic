@@ -2,17 +2,18 @@ package sort
 
 import "sort"
 
-type item struct {
-	Key   string
-	Value int64
-}
-type itemSliceASC []item
+type (
+	item struct {
+		Key   string
+		Value int64
+	}
+	itemSliceASC  []item
+	itemSliceDESC []item
+)
 
 func (s itemSliceASC) Len() int           { return len(s) }
 func (s itemSliceASC) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s itemSliceASC) Less(i, j int) bool { return s[i].Value < s[j].Value }
-
-type itemSliceDESC []item
 
 func (s itemSliceDESC) Len() int           { return len(s) }
 func (s itemSliceDESC) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }

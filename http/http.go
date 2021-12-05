@@ -23,30 +23,32 @@ import (
 	Signature string `json:"s"`
 }*/
 
-var contentHmac = "Content-Hmac"
+const contentHmac = "Content-Hmac"
 
-type auth struct {
-	Token    string `json:"t"`
-	DeviceId string `json:"d"`
-}
+type (
+	Server struct {
+		Addr            string        //监听地址
+		MaxPayloadBytes int           //最大消息长度
+		MaxHeaderBytes  int           //最大head息长度
+		Every           time.Duration //时间(毫秒)
+		Bursts          int           //个数(个)
+		ReadTimeout     time.Duration //读超时
+		WriteTimeout    time.Duration //写超时
+		Web             bool          //是否是用于web，跨域
+		UserAgent       string        //允许的UserAgent
+	}
 
-//返回数据
-type response struct {
-	State string      `json:"state"`
-	Data  interface{} `json:"data"`
-}
+	auth struct {
+		Token    string `json:"t"`
+		DeviceId string `json:"d"`
+	}
 
-type Server struct {
-	Addr            string        //监听地址
-	MaxPayloadBytes int           //最大消息长度
-	MaxHeaderBytes  int           //最大head息长度
-	Every           time.Duration //时间(毫秒)
-	Bursts          int           //个数(个)
-	ReadTimeout     time.Duration //读超时
-	WriteTimeout    time.Duration //写超时
-	Web             bool          //是否是用于web，跨域
-	UserAgent       string        //允许的UserAgent
-}
+	//response 返回数据
+	response struct {
+		State string      `json:"state"`
+		Data  interface{} `json:"data"`
+	}
+)
 
 // Run 启动服务
 func (h Server) Run() {

@@ -7,34 +7,34 @@ import (
 	"log"
 )
 
-var client MQTT.Client
+type (
+	Client struct {
+		Broker   string
+		Port     int
+		Id       string
+		Username string
+		Password string
+	}
 
-var MqttClient *mqttClient
+	SubscribeCallback func(topic string, Message []byte)
+	mqttClient        struct {
+	}
+)
 
-var subscribeMap = map[string]SubscribeCallback{}
+var (
+	MqttClient      *mqttClient
+	client          MQTT.Client
+	subscribeMap    = map[string]SubscribeCallback{}
+	globalSubscribe SubscribeCallback
+)
 
-var globalSubscribe SubscribeCallback
-
-type Client struct {
-	Broker   string
-	Port     int
-	Id       string
-	Username string
-	Password string
-}
-
-type mqttClient struct {
-}
-
-type SubscribeCallback func(topic string, Message []byte)
-
-//发送消息
+//Publish 发送消息
 func (c mqttClient) Publish(topic, message string) {
 	token := client.Publish(topic, 1, false, message)
 	token.Wait()
 }
 
-//监听
+//subscribe 监听
 func (c mqttClient) subscribe(topic string, callback SubscribeCallback) {
 	if token := client.Subscribe(topic, 1, func(client MQTT.Client, msg MQTT.Message) {
 		callback(msg.Topic(), msg.Payload())

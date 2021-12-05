@@ -12,19 +12,22 @@ import (
 //https://studygolang.com/articles/32352
 //https://www.tizi365.com/archives/290.html
 
-type server struct {
-}
+type (
+	Server struct {
+		Addr     string
+		Password string
+		DB       int
+		Flush    bool
+	}
+	server struct {
+	}
+)
 
-type Server struct {
-	Addr     string
-	Password string
-	DB       int
-	Flush    bool
-}
-
-var Redis *server
-var redisClient *redis.Client
-var ctx = context.Background()
+var (
+	Redis       *server
+	redisClient *redis.Client
+	ctx         = context.Background()
+)
 
 func (s server) SetStruct(key, field string, value interface{}) (err error) {
 	jsonBytes, err := json.Marshal(value)

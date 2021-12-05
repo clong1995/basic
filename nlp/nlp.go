@@ -12,50 +12,51 @@ import (
 	"strings"
 )
 
-var NLP *server
+type (
+	EntityItem struct {
+		Synonym string `json:"synonym"`
+		Weight  string `json:"weight"`
+		Tag     string `json:"tag"`
+		Word    string `json:"word"`
+	}
+	EntityResult struct {
+		Result []EntityItem `json:"result"`
+	}
+	Sentiment struct {
+		PositiveProb float64 `json:"positive_prob"`
+		Sentiment    string  `json:"sentiment"`
+		NegativeProb float64 `json:"negative_prob"`
+	}
 
-type server struct {
-	accessKeyId     string
-	accessKeySecret string
-}
+	SentimentResult struct {
+		Result Sentiment `json:"result"`
+	}
 
-type result struct {
-	RequestId string `json:"RequestId"`
-	Success   bool   `json:"success"`
-	Data      string `json:"data"`
-}
+	Server struct {
+		AccessKeyId     string
+		AccessKeySecret string
+	}
 
-type EntityItem struct {
-	Synonym string `json:"synonym"`
-	Weight  string `json:"weight"`
-	Tag     string `json:"tag"`
-	Word    string `json:"word"`
-}
+	server struct {
+		accessKeyId     string
+		accessKeySecret string
+	}
+	result struct {
+		RequestId string `json:"RequestId"`
+		Success   bool   `json:"success"`
+		Data      string `json:"data"`
+	}
+)
 
-type EntityResult struct {
-	Result []EntityItem `json:"result"`
-}
+var (
+	NLP *server
 
-type Sentiment struct {
-	PositiveProb float64 `json:"positive_prob"`
-	Sentiment    string  `json:"sentiment"`
-	NegativeProb float64 `json:"negative_prob"`
-}
-
-type SentimentResult struct {
-	Result Sentiment `json:"result"`
-}
-
-type Server struct {
-	AccessKeyId     string
-	AccessKeySecret string
-}
-
-var sentimentValue = map[string]int{
-	"负面": -1,
-	"中性": 0,
-	"正面": 1,
-}
+	sentimentValue = map[string]int{
+		"负面": -1,
+		"中性": 0,
+		"正面": 1,
+	}
+)
 
 // Entity 命名实体
 func (s server) Entity(text string) (entityList []EntityItem, err error) {

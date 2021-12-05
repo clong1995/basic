@@ -1,0 +1,23 @@
+html {
+    font-size: 14px;
+}
+
+html, body {
+    height: 100%;
+}
+
+body, h1, h2 {
+    margin: 0;
+}
+
+.g-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.g-center-bg {
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    background-size: contain;
+}

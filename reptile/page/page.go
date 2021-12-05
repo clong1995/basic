@@ -9,13 +9,14 @@ import (
 	"time"
 )
 
+type (
+	Server struct {
+	}
+	server struct {
+	}
+)
+
 var Page *server
-
-type server struct {
-}
-
-type Server struct {
-}
 
 // Doc 获取页面
 func (s server) Doc(url string, selector string) (string, error) {

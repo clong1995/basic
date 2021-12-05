@@ -11,27 +11,30 @@ import (
 	"log"
 )
 
-var Jverify *server
+type (
+	Server struct {
+		AppKey       string
+		MasterSecret string
+		PrivateKey   []byte
+	}
 
-type server struct {
-	server Server
-}
-type Server struct {
-	AppKey       string
-	MasterSecret string
-	PrivateKey   []byte
-}
-type req struct {
-	LoginToken string `json:"loginToken"` //认证SDK获取到的loginToken
-	ExID       string `json:"exID"`       //开发者自定义的id，非必填
-}
-type res struct {
-	Id      int64  `json:"id"`
-	Code    int64  `json:"code"`
-	Content string `json:"content"`
-	ExID    string `json:"exID"`
-	Phone   string `json:"phone"`
-}
+	server struct {
+		server Server
+	}
+	req struct {
+		LoginToken string `json:"loginToken"` //认证SDK获取到的loginToken
+		ExID       string `json:"exID"`       //开发者自定义的id，非必填
+	}
+	res struct {
+		Id      int64  `json:"id"`
+		Code    int64  `json:"code"`
+		Content string `json:"content"`
+		ExID    string `json:"exID"`
+		Phone   string `json:"phone"`
+	}
+)
+
+var Jverify *server
 
 //Decrypt 解密loginToken获取手机号
 func (s *server) Decrypt(loginToken string) (phone string, err error) {

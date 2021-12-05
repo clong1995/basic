@@ -2,15 +2,31 @@ package route
 
 import "log"
 
+type (
+	// RoutesMap 路由存储结构
+	RoutesMap map[string]Route
+	// Handle 函数签名
+	Handle func(string, []byte) (interface{}, error)
+
+	// IpHandle 返回IP的签名
+	IpHandle func(string, string, []byte) (interface{}, error)
+
+	// Route 一个路由的结构
+	Route struct {
+		Url         string
+		ContentType string
+		Pattern     Pattern
+		handle      Handle
+		ipHandle    IpHandle
+	}
+
+	//route 路由表
+	route struct {
+		routes RoutesMap
+	}
+)
+
 var Routes route
-
-// RoutesMap 路由存储结构
-type RoutesMap map[string]Route
-
-//路由表
-type route struct {
-	routes RoutesMap
-}
 
 // Put 向路由表注册路由
 func (r route) Put(route Route) {
@@ -45,21 +61,6 @@ func (r route) Put(route Route) {
 // All 返回路由表
 func (r route) All() RoutesMap {
 	return r.routes
-}
-
-// Handle 函数签名
-type Handle func(string, []byte) (interface{}, error)
-
-// IpHandle 返回IP的签名
-type IpHandle func(string, string, []byte) (interface{}, error)
-
-// Route 一个路由的结构
-type Route struct {
-	Url         string
-	ContentType string
-	Pattern     Pattern
-	handle      Handle
-	ipHandle    IpHandle
 }
 
 func (r Route) Register(handle Handle) {

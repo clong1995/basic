@@ -1,14 +1,15 @@
 // Package route 路由模式配置
 package route
 
-type Pattern struct {
-	Auth      PatternType //认证
-	Encrypt   PatternType //加密
-	UserAgent PatternType //user-agent
-	General   PatternType //通用模式
-}
-
-type PatternType int
+type (
+	Pattern struct {
+		Auth      PatternType //认证
+		Encrypt   PatternType //加密
+		UserAgent PatternType //user-agent
+		General   PatternType //通用模式
+	}
+	PatternType int
+)
 
 const (
 	None PatternType = iota // 开始生成枚举值, 默认为0

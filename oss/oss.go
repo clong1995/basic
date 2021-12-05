@@ -18,28 +18,30 @@ import (
 	"time"
 )
 
-var Oss *server
-var ossClient *oss.Client
-var bucket *oss.Bucket
+type (
+	Server struct {
+		Endpoint        string
+		AccessKeyId     string
+		AccessKeySecret string
+		BucketName      string
+	}
+	UploadUrl struct {
+		Url            string `json:"url"`
+		OSSAccessKeyId string `json:"OSSAccessKeyId"`
+		Policy         string `json:"policy"`
+		Signature      string `json:"signature"`
+		Key            string `json:"key"`
+	}
+	server struct {
+		bucketName string
+	}
+)
 
-type server struct {
-	bucketName string
-}
-
-type Server struct {
-	Endpoint        string
-	AccessKeyId     string
-	AccessKeySecret string
-	BucketName      string
-}
-
-type UploadUrl struct {
-	Url            string `json:"url"`
-	OSSAccessKeyId string `json:"OSSAccessKeyId"`
-	Policy         string `json:"policy"`
-	Signature      string `json:"signature"`
-	Key            string `json:"key"`
-}
+var (
+	Oss       *server
+	ossClient *oss.Client
+	bucket    *oss.Bucket
+)
 
 func (s server) PutSignPolicyFileIdURL(fId string) (url UploadUrl, err error) {
 	policy := map[string]interface{}{

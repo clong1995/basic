@@ -11,16 +11,18 @@ import (
 	"time"
 )
 
-var SId *server
+var (
+	SId   *server
+	sNode *snowflake.Node
+)
 
-var sNode *snowflake.Node
-
-type server struct {
-}
-
-type Server struct {
-	Node int64
-}
+type (
+	Server struct {
+		Node int64
+	}
+	server struct {
+	}
+)
 
 //String 获取string id
 func (s server) String() string {

@@ -7,12 +7,15 @@ import (
 
 var Amap *server
 
-type server struct {
-	server Server
-}
-type Server struct {
-	WebKey string
-}
+type (
+	Server struct {
+		WebKey string
+	}
+
+	server struct {
+		server Server
+	}
+)
 
 //Geo 地理编码 API 服务地址，名称转坐标
 func (s server) Geo(address string) (res geocode.GeoRes, err error) {
