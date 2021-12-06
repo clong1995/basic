@@ -15,6 +15,7 @@ import (
 
 type (
 	Server struct {
+		Dev             bool
 		AccessKeyId     string
 		AccessKeySecret string
 	}
@@ -23,6 +24,7 @@ type (
 		expiration time.Time
 	}
 	server struct {
+		dev bool
 	}
 )
 
@@ -32,7 +34,7 @@ var (
 	dict        = make(map[string]codeMsg)
 )
 
-func (s server) Send(phone, signName, templateCode string, showCode bool) (err error) {
+func (s server) Send(phone, signName, templateCode string) (err error) {
 	now := time.Now()
 
 	//删除过期的
@@ -51,27 +53,30 @@ func (s server) Send(phone, signName, templateCode string, showCode bool) (err e
 	//验证码
 	code := random.NumberNotZeroStart(6)
 
-	if showCode {
+	//开发者模式
+	if s.dev {
 		log.Println(code)
-	}
-	//发送
-	sendSmsRequest := &dysmsapi20170525.SendSmsRequest{
-		PhoneNumbers:  tea.String(phone),
-		SignName:      tea.String(signName),
-		TemplateCode:  tea.String(templateCode),
-		TemplateParam: tea.String(fmt.Sprintf("{\"code\":\"%s\"}", code)),
-	}
-	resp, err := dysmsClient.SendSms(sendSmsRequest)
-	if err != nil {
-		println(err)
-		return
-	}
-
-	if tea.StringValue(resp.Body.Code) == "OK" {
-
 	} else {
-		err = fmt.Errorf("dysms err %v", resp.Body.Message)
-		return
+		//发送
+		sendSmsRequest := &dysmsapi20170525.SendSmsRequest{
+			PhoneNumbers:  tea.String(phone),
+			SignName:      tea.String(signName),
+			TemplateCode:  tea.String(templateCode),
+			TemplateParam: tea.String(fmt.Sprintf("{\"code\":\"%s\"}", code)),
+		}
+		var resp *dysmsapi20170525.SendSmsResponse
+		resp, err = dysmsClient.SendSms(sendSmsRequest)
+		if err != nil {
+			println(err)
+			return
+		}
+
+		if tea.StringValue(resp.Body.Code) == "OK" {
+
+		} else {
+			err = fmt.Errorf("dysms err %v", resp.Body.Message)
+			return
+		}
 	}
 
 	//保存
@@ -124,6 +129,6 @@ func (s Server) Run() {
 		log.Fatalln(color.Red, err, color.Reset)
 	}
 
-	Dysms = new(server)
+	Dysms = &server{dev: s.Dev}
 	color.Success("[dysms] create client success")
 }

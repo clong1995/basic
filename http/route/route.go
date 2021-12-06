@@ -3,8 +3,8 @@ package route
 import "log"
 
 type (
-	// RoutesMap 路由存储结构
-	RoutesMap map[string]Route
+	// RouteMap 路由存储结构
+	routeMap map[string]Route
 	// Handle 函数签名
 	Handle func(string, []byte) (interface{}, error)
 
@@ -19,23 +19,19 @@ type (
 		handle      Handle
 		ipHandle    IpHandle
 	}
-
-	//route 路由表
-	route struct {
-		routes RoutesMap
-	}
 )
 
-var Routes route
+//var Routes route
+var routes routeMap
 
 // Put 向路由表注册路由
-func (r route) Put(route Route) {
+func (r routeMap) put(route Route) {
 	if route.handle == nil && route.ipHandle == nil {
 		//存在，结束程序
 		log.Panicf("'%s' handle is nill", route.Url)
 	}
 	//检查是否存在路由
-	if _, ok := r.routes[route.Url]; ok {
+	if _, ok := r[route.Url]; ok {
 		//存在，结束程序
 		log.Panicf("'%s' redeclared in this gateway", route.Url)
 	}
@@ -55,22 +51,22 @@ func (r route) Put(route Route) {
 		//默认不使用通用模式
 		route.Pattern.General = GeneralDisable
 	}
-	r.routes[route.Url] = route
+	r[route.Url] = route
 }
 
 // All 返回路由表
-func (r route) All() RoutesMap {
-	return r.routes
+func All() map[string]Route {
+	return routes
 }
 
 func (r Route) Register(handle Handle) {
 	r.handle = handle
-	Routes.Put(r)
+	routes.put(r)
 }
 
 func (r Route) IpRegister(ipHandle IpHandle) {
 	r.ipHandle = ipHandle
-	Routes.Put(r)
+	routes.put(r)
 }
 
 func (r Route) Handle() Handle {
@@ -82,5 +78,5 @@ func (r Route) IpHandle() IpHandle {
 }
 
 func init() {
-	Routes = route{RoutesMap{}}
+	routes = routeMap{}
 }

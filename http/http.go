@@ -67,7 +67,7 @@ func (h Server) Run() {
 		h.Every = 1 * time.Second
 	}
 	if h.Bursts == 0 {
-		h.Every = 100
+		h.Bursts = 100
 	}
 	if h.ReadTimeout == 0 {
 		h.ReadTimeout = 10 * time.Second
@@ -82,7 +82,8 @@ func (h Server) Run() {
 	limiter := rate.NewLimiter(rate.Every(h.Every), h.Bursts)
 
 	//执行路由表
-	for s, r := range Routes.All() {
+	routeList := All()
+	for s, r := range routeList {
 		//闭包保存路由
 		func(pattern string, route Route) {
 			mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
@@ -335,7 +336,7 @@ func (h Server) Run() {
 		}(s, r)
 	}
 
-	color.Success(fmt.Sprintf("[http] %s listening %s", h.UserAgent, h.Addr))
+	color.Success(fmt.Sprintf("[http] %s listening %s,routes total:%d", h.UserAgent, h.Addr, len(routeList)))
 	//启动服务
 	server := &http.Server{
 		Addr:           h.Addr,
