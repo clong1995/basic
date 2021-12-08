@@ -6,9 +6,10 @@ import (
 )
 
 func XRealIp(r *http.Request) (ip string) {
-	ip = r.Header.Get("X-Real-Ip")
+	//X-Forwarded-For和X-Real-Ip可能是伪造的
+	ip = strings.TrimSpace(strings.Split(r.Header.Get("X-Forwarded-For"), ",")[0])
 	if ip == "" {
-		ip = r.Header.Get("X-Forwarded-For")
+		ip = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
 	}
 	if ip == "" {
 		ip = r.RemoteAddr

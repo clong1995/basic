@@ -5,7 +5,7 @@ import (
 )
 
 func TestInfo(t *testing.T) {
-	Server{
+	/*Server{
 		Node: 1,
 	}.CreateNode()
 
@@ -16,5 +16,13 @@ func TestInfo(t *testing.T) {
 		//转整型
 		id := SId.ToInt(s)
 		t.Log(id)
+	}*/
+
+	/*ips := map[string]*string{}
+	value, exists := ips["a"]
+	if !exists {
+		ips["a"] = String("A")
 	}
+	t.Log("value")
+	t.Log(value)*/
 }

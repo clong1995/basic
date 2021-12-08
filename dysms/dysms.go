@@ -10,7 +10,6 @@ import (
 	dysmsapi20170525 "github.com/alibabacloud-go/dysmsapi-20170525/v2/client"
 	"github.com/alibabacloud-go/tea/tea"
 	"log"
-	"time"
 )
 
 type (
@@ -18,10 +17,6 @@ type (
 		Dev             bool
 		AccessKeyId     string
 		AccessKeySecret string
-	}
-	codeMsg struct {
-		code       string
-		expiration time.Time
 	}
 	server struct {
 		dev bool
@@ -31,27 +26,11 @@ type (
 var (
 	Dysms       *server
 	dysmsClient *dysmsapi20170525.Client
-	dict        = make(map[string]codeMsg)
 )
 
-func (s server) Send(phone, signName, templateCode string) (err error) {
-	now := time.Now()
-
-	//删除过期的
-	for p, msg := range dict {
-		if now.After(msg.expiration) {
-			delete(dict, p)
-		}
-	}
-
-	//构造新的
-	mm, err := time.ParseDuration("5m")
-	if err != nil {
-		return
-	}
-
+func (s server) Send(phone, signName, templateCode string) (code string, err error) {
 	//验证码
-	code := random.NumberNotZeroStart(6)
+	code = random.NumberNotZeroStart(6)
 
 	//开发者模式
 	if s.dev {
@@ -79,32 +58,6 @@ func (s server) Send(phone, signName, templateCode string) (err error) {
 		}
 	}
 
-	//保存
-	dict[phone] = codeMsg{
-		code:       code,
-		expiration: now.Add(mm),
-	}
-
-	return
-}
-
-func (s server) Check(phone, code string) (result bool) {
-	now := time.Now()
-	//删除过期的
-	for p, msg := range dict {
-		if now.After(msg.expiration) {
-			delete(dict, p)
-		}
-	}
-
-	if value, ok := dict[phone]; ok {
-		//判断验证码
-		if value.code == code {
-			//正确
-			delete(dict, phone)
-			return true
-		}
-	}
 	return
 }
 

@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -23,14 +24,19 @@ import (
 	Signature string `json:"s"`
 }*/
 
-const contentHmac = "Content-Hmac"
+const (
+	contentHmac     = "Content-Hmac"   //指纹
+	maxRequestCount = 1200             //存活周期内的最大请求数 1200
+	dumpPeriod      = 10 * time.Minute //清理周期 10
+	maxAliveTime    = 10 * time.Minute //存活周期 10
+)
 
 type (
 	Server struct {
 		Addr            string        //监听地址
 		MaxPayloadBytes int           //最大消息长度
 		MaxHeaderBytes  int           //最大head息长度
-		Every           time.Duration //时间(毫秒)
+		Every           time.Duration //时间(秒)
 		Bursts          int           //个数(个)
 		ReadTimeout     time.Duration //读超时
 		WriteTimeout    time.Duration //写超时
@@ -48,11 +54,68 @@ type (
 		State string      `json:"state"`
 		Data  interface{} `json:"data"`
 	}
+
+	iPItem struct {
+		count    int           //访问次数
+		lastDate time.Time     //最后的活跃时间
+		limiter  *rate.Limiter //限流器
+	}
+
+	//iPRateLimiter ip限流
+	iPRateLimiter struct {
+		ips   map[string]*iPItem
+		mu    *sync.RWMutex
+		rate  rate.Limit
+		burst int
+	}
 )
+
+func (i *iPRateLimiter) ipLimiter(ip string) (ipItem *iPItem) {
+	i.mu.Lock()
+	ipItem, exists := i.ips[ip]
+	if exists { //存在
+		//limiter = ipItem.limiter
+	} else { //不存在
+		ipItem = &iPItem{
+			limiter: rate.NewLimiter(i.rate, i.burst),
+		}
+		i.ips[ip] = ipItem
+	}
+	ipItem.lastDate = time.Now()
+	ipItem.count++
+	if ipItem.count > maxRequestCount {
+		//TODO 在一个清理周期内超过最大请求限制的时候，判定为异常
+	}
+	i.mu.Unlock()
+	return ipItem
+}
+
+//dump 清除不活跃的ip，释放内存
+func (i *iPRateLimiter) dump() {
+	ticker := time.NewTicker(dumpPeriod)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				now := time.Now()
+				log.Println("触发清理")
+				i.mu.Lock()
+				for k, v := range i.ips {
+					//清除不活跃ip
+					if v.lastDate.Add(maxAliveTime).Before(now) {
+						delete(i.ips, k)
+					}
+					//初始高频ip为0
+					v.count = 0
+				}
+				i.mu.Unlock()
+			}
+		}
+	}()
+}
 
 // Run 启动服务
 func (h Server) Run() {
-
 	//当不配置的时候，使用以下默认配置
 	if h.Addr == "" {
 		h.Addr = ":80"
@@ -67,7 +130,7 @@ func (h Server) Run() {
 		h.Every = 1 * time.Second
 	}
 	if h.Bursts == 0 {
-		h.Bursts = 100
+		h.Bursts = 2
 	}
 	if h.ReadTimeout == 0 {
 		h.ReadTimeout = 10 * time.Second
@@ -76,10 +139,17 @@ func (h Server) Run() {
 		h.ReadTimeout = 10 * time.Second
 	}
 
-	mux := http.NewServeMux()
-
 	//限流器
-	limiter := rate.NewLimiter(rate.Every(h.Every), h.Bursts)
+	iPLimiter := iPRateLimiter{
+		ips:   make(map[string]*iPItem),
+		mu:    &sync.RWMutex{},
+		rate:  rate.Every(h.Every),
+		burst: h.Bursts,
+	}
+
+	iPLimiter.dump()
+
+	mux := http.NewServeMux()
 
 	//执行路由表
 	routeList := All()
@@ -92,8 +162,16 @@ func (h Server) Run() {
 					_ = r.Body.Close()
 				}()
 
+				realIp := ip.XRealIp(r)
 				//限流
-				err := limiter.Wait(context.Background())
+				ipItem := iPLimiter.ipLimiter(realIp)
+				if ipItem.count > maxRequestCount { //高频ip
+					errStr := fmt.Sprintf("%s判定为高频请求ip", realIp)
+					log.Println(errStr)
+					http.Error(w, errStr, http.StatusTooManyRequests)
+					return
+				}
+				err := ipItem.limiter.Wait(context.Background())
 				if err != nil {
 					log.Printf("%s : %s\n", pattern, err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -235,7 +313,7 @@ func (h Server) Run() {
 				//检查是否有特殊的handle
 				ipHandle := route.IpHandle()
 				if ipHandle != nil {
-					result, err = ipHandle(ip.XRealIp(r), id.SId.ToString(tId), paramByte)
+					result, err = ipHandle(realIp, id.SId.ToString(tId), paramByte)
 				} else {
 					result, err = route.Handle()(id.SId.ToString(tId), paramByte)
 				}
