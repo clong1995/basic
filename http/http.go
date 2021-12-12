@@ -98,7 +98,7 @@ func (i *iPRateLimiter) dump() {
 			select {
 			case <-ticker.C:
 				now := time.Now()
-				log.Println("触发清理")
+				//log.Println("触发清理")
 				i.mu.Lock()
 				for k, v := range i.ips {
 					//清除不活跃ip
