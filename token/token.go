@@ -50,7 +50,7 @@ func (t *Token) Decode(token string) (err error) {
 	}
 	t.Timestamp = int64(binary.LittleEndian.Uint64(b))
 
-	//提取时间戳
+	//提取id
 	_, err = buff.Read(b)
 	if err != nil {
 		return

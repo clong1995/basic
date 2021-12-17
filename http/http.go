@@ -1,13 +1,15 @@
 package http
 
 import (
-	"basic/cipher"
 	"basic/color"
 	. "basic/http/route"
 	"basic/id"
 	"basic/ip"
 	"basic/token"
+	"bytes"
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/time/rate"
@@ -25,7 +27,7 @@ import (
 }*/
 
 const (
-	contentHmac     = "Content-Hmac"   //指纹
+	contentSign     = "Content-Sign"   //指纹
 	maxRequestCount = 1200             //存活周期内的最大请求数 1200
 	dumpPeriod      = 10 * time.Minute //清理周期 10
 	maxAliveTime    = 10 * time.Minute //存活周期 10
@@ -112,6 +114,18 @@ func (i *iPRateLimiter) dump() {
 			}
 		}
 	}()
+}
+
+func sign(message, ak []byte) string {
+	var buffer bytes.Buffer
+	buffer.Write(message)
+	buffer.Write(ak)
+	sum := md5.Sum(buffer.Bytes())
+	return hex.EncodeToString(sum[:])
+}
+
+func checkSign(signature string, message, ak []byte) bool {
+	return signature == sign(message, ak)
 }
 
 // Run 启动服务
@@ -209,7 +223,7 @@ func (h Server) Run() {
 				}
 
 				//检查签名
-				sig := header.Get(contentHmac)
+				sig := header.Get(contentSign)
 				if route.Pattern.Auth == Enable {
 					//有认证必须要校验签名
 					if sig == "" {
@@ -292,7 +306,7 @@ func (h Server) Run() {
 						ak = []byte(tk.AccessKeyID())
 
 						//校验签名
-						if !cipher.CheckHmacSha256(paramByte, sig, ak) {
+						if !checkSign(sig, paramByte, ak) {
 							errStr := fmt.Sprintf("%s : %s\n", pattern, "指纹检验失败")
 							log.Println(errStr)
 							http.Error(w, errStr, http.StatusNotAcceptable)
@@ -391,9 +405,9 @@ func (h Server) Run() {
 
 				//计算hmac
 				if route.Pattern.Auth == Enable {
-					responseSig := cipher.HmacSha256(jsonBytes, ak)
+					responseSig := sign(jsonBytes, ak)
 					//写入header
-					w.Header().Set(contentHmac, responseSig)
+					w.Header().Set(contentSign, responseSig)
 				}
 
 				//JSON
