@@ -61,14 +61,14 @@ func review(unmarshal interface{}, supTagJson string, field ...*reflect.Value) e
 			if tagRequired == "true" {
 				if typeField.Type.Name() != "" { //基本类型，存在required，string不得为空，number不得为0
 					if valueField.IsZero() || valueField.Interface() == "" {
-						err = fmt.Errorf("%s %s [%s:%s] 不得为空", supTagJson, tagJson, name, typ)
+						err = fmt.Errorf("%s %s [%s:%s] 不得为空\n", supTagJson, tagJson, name, typ)
 						break
 					}
 				} else { //非基本类型，Slice、Map等
 					//log.Println("递归")
 					if valueField.Type().Kind() == reflect.Slice || valueField.Type().Kind() == reflect.Map { //判断长度
 						if valueField.Len() == 0 {
-							err = fmt.Errorf("%s %s [%s:%s] 不得为空", supTagJson, tagJson, name, typ)
+							err = fmt.Errorf("%s %s [%s:%s] 不得为空\n", supTagJson, tagJson, name, typ)
 							break
 						}
 					}

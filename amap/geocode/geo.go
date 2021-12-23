@@ -5,7 +5,9 @@ import (
 	"basic/request"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+	"strings"
 )
 
 //地理编码 API 服务地址，名称转坐标，适合精确描述，标志性，如青岛五四广场、山东省青岛市
@@ -35,7 +37,7 @@ type (
 		Township         interface{} `json:"township" deepcopier:"skip"` //乡镇/街道
 		Street           interface{} `json:"street" deepcopier:"skip"`   //道路
 		Number           interface{} `json:"number" deepcopier:"skip"`   //门牌
-		Location         string      `json:"location"`                   //坐标
+		Location         string      `json:"location"`                   //坐标 返回值为"经,纬",这是错误的形式，应该为"纬,经"
 	}
 )
 
@@ -84,6 +86,11 @@ func Geo(key, address string) (res GeoRes, err error) {
 		//修正Number类型
 		if val, ok := r.Number.(string); ok {
 			res.Number = val
+		}
+		//修正"经,纬"为"纬,经"
+		if r.Location != "" {
+			location := strings.Split(r.Location, ",")
+			res.Location = fmt.Sprintf("%s,%s", location[1], location[0])
 		}
 		return
 	}

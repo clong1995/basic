@@ -2,6 +2,8 @@ package db
 
 import (
 	"basic/id"
+	"fmt"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -19,6 +21,10 @@ func Key(key ...int64) string {
 func DBKey(key ...string) int64 {
 	if len(key) == 1 {
 		//转化key
+		if len(key[0]) < 10 {
+			log.Println(fmt.Sprintf("id格式错误: %s", key[0]))
+			return 0
+		}
 		return id.SId.ToInt(key[0])
 	}
 	//生成key
