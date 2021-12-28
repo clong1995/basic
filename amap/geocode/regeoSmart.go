@@ -4,7 +4,9 @@ import (
 	"basic/request"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+	"strings"
 )
 
 //逆地理编码API服务地址，坐标转名称
@@ -58,8 +60,18 @@ type (
 	}
 )
 
-// ReGeoSmart location "经,纬"
+// ReGeoSmart location "纬,经"
 func ReGeoSmart(key, location string) (res ReGeoSmartRes, err error) {
+
+	arr := strings.Split(location, ",")
+	if len(arr) == 2 {
+		location = fmt.Sprintf("%s,%s", arr[1], arr[0])
+	} else {
+		err = fmt.Errorf("location error")
+		return
+	}
+
+	//location "经,纬"
 	resBytes, err := request.HttpGet("https://restapi.amap.com/v3/geocode/regeo", map[string]string{
 		"key":        key,
 		"location":   location,
@@ -97,6 +109,13 @@ func ReGeoSmart(key, location string) (res ReGeoSmartRes, err error) {
 	}
 	if len(resp.ReGeocode.Pois) > 0 {
 		res.Poi = resp.ReGeocode.Pois[0]
+		arr = strings.Split(res.Poi.Location, ",")
+		if len(arr) == 2 {
+			res.Poi.Location = fmt.Sprintf("%s,%s", arr[1], arr[0])
+		} else {
+			err = fmt.Errorf("location error")
+			return
+		}
 	}
 	if len(resp.ReGeocode.Aois) > 0 {
 		res.Aoi = resp.ReGeocode.Aois[0]

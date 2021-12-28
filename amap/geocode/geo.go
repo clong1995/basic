@@ -90,6 +90,10 @@ func Geo(key, address string) (res GeoRes, err error) {
 		//修正"经,纬"为"纬,经"
 		if r.Location != "" {
 			location := strings.Split(r.Location, ",")
+			if len(location) != 2 {
+				err = fmt.Errorf("location error")
+				return
+			}
 			res.Location = fmt.Sprintf("%s,%s", location[1], location[0])
 		}
 		return

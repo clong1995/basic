@@ -68,6 +68,7 @@ func PrivateBaiduImage(name string) (url string, err error) {
 		//上传url
 		url, err = oss.Oss.UploadUrl(image.Value)
 		if err != nil {
+			log.Println(err)
 			return
 		}
 	}

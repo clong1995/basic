@@ -8,7 +8,7 @@ import (
 )
 
 func TestBaiduImage(t *testing.T) {
-	page.Server{}.CreateServer()
+	page.Server{}.Run()
 
 	image, err := BaiduImage("苏州风景")
 	if err != nil {
@@ -22,7 +22,7 @@ func TestPrivateBaiduImage(t *testing.T) {
 	//id
 	id.Server{
 		Node: 1,
-	}.CreateNode()
+	}.Run()
 
 	//云存储
 	oss.Server{
@@ -30,9 +30,9 @@ func TestPrivateBaiduImage(t *testing.T) {
 		AccessKeyId:     "",
 		AccessKeySecret: "",
 		BucketName:      "",
-	}.CreateClient()
+	}.Run()
 	//爬虫
-	page.Server{}.CreateServer()
+	page.Server{}.Run()
 
 	image, err := PrivateBaiduImage("苏州风景")
 	if err != nil {
