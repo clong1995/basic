@@ -51,7 +51,7 @@ func BaiduImage(name string) (res Result, err error) {
 	return
 }
 
-func PrivateBaiduImage(name string) (url string, err error) {
+func PrivateBaiduImage(path, name string) (url string, err error) {
 	image, err := BaiduImage(name)
 	if err != nil {
 		log.Println(err)
@@ -59,14 +59,14 @@ func PrivateBaiduImage(name string) (url string, err error) {
 	}
 	if image.Type == "base64" {
 		//上传base64
-		url, err = oss.Oss.UploadBase64(image.Value)
+		url, err = oss.Oss.UploadBase64(path, image.Value)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	} else {
 		//上传url
-		url, err = oss.Oss.UploadUrl(image.Value)
+		url, err = oss.Oss.UploadUrl(path, image.Value)
 		if err != nil {
 			log.Println(err)
 			return

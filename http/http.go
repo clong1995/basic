@@ -7,7 +7,6 @@ import (
 	"basic/ip"
 	"basic/token"
 	"bytes"
-	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
@@ -35,15 +34,15 @@ const (
 
 type (
 	Server struct {
-		Addr            string        //监听地址
-		MaxPayloadBytes int           //最大消息长度
-		MaxHeaderBytes  int           //最大head息长度
-		Every           time.Duration //时间(秒)
-		Bursts          int           //个数(个)
-		ReadTimeout     time.Duration //读超时
-		WriteTimeout    time.Duration //写超时
-		Web             bool          //是否是用于web，跨域
-		UserAgent       string        //允许的UserAgent
+		Addr            string     //监听地址
+		MaxPayloadBytes int        //最大消息长度
+		MaxHeaderBytes  int        //最大head息长度
+		Rate            rate.Limit //每秒产生令牌的个数
+		Burst           int        //令牌桶大小个数
+		ReadTimeout     int        //读超时秒
+		WriteTimeout    int        //写超时秒
+		Web             bool       //是否是用于web，跨域
+		UserAgent       string     //允许的UserAgent
 	}
 
 	auth struct {
@@ -67,17 +66,15 @@ type (
 	iPRateLimiter struct {
 		ips   map[string]*iPItem
 		mu    *sync.RWMutex
-		rate  rate.Limit
-		burst int
+		rate  rate.Limit //速率
+		burst int        //令牌桶大小
 	}
 )
 
 func (i *iPRateLimiter) ipLimiter(ip string) (ipItem *iPItem) {
 	i.mu.Lock()
 	ipItem, exists := i.ips[ip]
-	if exists { //存在
-		//limiter = ipItem.limiter
-	} else { //不存在
+	if !exists { //不存在
 		ipItem = &iPItem{
 			limiter: rate.NewLimiter(i.rate, i.burst),
 		}
@@ -85,14 +82,11 @@ func (i *iPRateLimiter) ipLimiter(ip string) (ipItem *iPItem) {
 	}
 	ipItem.lastDate = time.Now()
 	ipItem.count++
-	if ipItem.count > maxRequestCount {
-		//TODO 在一个清理周期内超过最大请求限制的时候，判定为异常
-	}
 	i.mu.Unlock()
 	return ipItem
 }
 
-//dump 清除不活跃的ip，释放内存
+//dump 清除不活跃的ip，重置高频ip，释放内存
 func (i *iPRateLimiter) dump() {
 	ticker := time.NewTicker(dumpPeriod)
 	go func() {
@@ -140,25 +134,25 @@ func (h Server) Run() {
 	if h.MaxHeaderBytes == 0 {
 		h.MaxHeaderBytes = 1 << 20
 	}
-	if h.Every == 0 {
-		h.Every = 1 * time.Second
+	if h.Rate == 0 {
+		h.Rate = 3
 	}
-	if h.Bursts == 0 {
-		h.Bursts = 2
+	if h.Burst == 0 {
+		h.Burst = 5
 	}
 	if h.ReadTimeout == 0 {
-		h.ReadTimeout = 10 * time.Second
+		h.ReadTimeout = 5
 	}
 	if h.WriteTimeout == 0 {
-		h.ReadTimeout = 10 * time.Second
+		h.ReadTimeout = 5
 	}
 
 	//限流器
 	iPLimiter := iPRateLimiter{
 		ips:   make(map[string]*iPItem),
 		mu:    &sync.RWMutex{},
-		rate:  rate.Every(h.Every),
-		burst: h.Bursts,
+		rate:  h.Rate,
+		burst: h.Burst,
 	}
 
 	iPLimiter.dump()
@@ -177,7 +171,7 @@ func (h Server) Run() {
 				}()
 
 				realIp := ip.XRealIp(r)
-				//限流
+				//阻止高频ip
 				ipItem := iPLimiter.ipLimiter(realIp)
 				if ipItem.count > maxRequestCount { //高频ip
 					errStr := fmt.Sprintf("%s判定为高频请求ip", realIp)
@@ -185,10 +179,18 @@ func (h Server) Run() {
 					http.Error(w, errStr, http.StatusTooManyRequests)
 					return
 				}
-				err := ipItem.limiter.Wait(context.Background())
+				//限流
+				/*err := ipItem.limiter.Wait(context.Background())
 				if err != nil {
 					log.Printf("%s : %s\n", pattern, err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}*/
+				if !ipItem.limiter.Allow() {
+					//抛弃多余流量
+					errStr := fmt.Sprintf("%s请求过快", realIp)
+					log.Println(errStr)
+					http.Error(w, errStr, http.StatusTooManyRequests)
 					return
 				}
 
@@ -245,6 +247,7 @@ func (h Server) Run() {
 				//	"ccc":"ddd"
 				//}
 				var paramByte []byte
+				var err error
 				//根据方法不同处理参数
 				if r.Method == http.MethodGet { //TODO get没有测试
 					var m = make(map[string]string)
@@ -432,8 +435,8 @@ func (h Server) Run() {
 	//启动服务
 	server := &http.Server{
 		Addr:           h.Addr,
-		ReadTimeout:    h.ReadTimeout,
-		WriteTimeout:   h.WriteTimeout,
+		ReadTimeout:    time.Duration(h.ReadTimeout) * time.Second,
+		WriteTimeout:   time.Duration(h.WriteTimeout) * time.Second,
 		MaxHeaderBytes: h.MaxHeaderBytes,
 		Handler:        mux,
 	}

@@ -3,7 +3,6 @@ package oss
 
 import (
 	"basic/color"
-	"basic/id"
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha1"
@@ -108,8 +107,7 @@ func (s server) GetURL(name string) string {
 }
 
 // UploadBase64 上传base64
-func (s server) UploadBase64(value string) (string, error) {
-	sId := id.SId.String()
+func (s server) UploadBase64(path, value string) (string, error) {
 	fileContentPosition := strings.Index(value, ",")
 	uploadBaseString := value[fileContentPosition+1:]
 	decodeString, err := base64.StdEncoding.DecodeString(uploadBaseString)
@@ -117,16 +115,15 @@ func (s server) UploadBase64(value string) (string, error) {
 		return "", err
 	}
 	buf := bytes.NewBuffer(decodeString)
-	err = bucket.PutObject(sId, buf)
+	err = bucket.PutObject(path, buf)
 	if err != nil {
 		log.Println(err)
 		return "", err
 	}
-	return s.GetURL(sId), nil
+	return path, nil
 }
 
-func (s server) UploadUrl(url string) (string, error) {
-	sId := id.SId.String()
+func (s server) UploadUrl(path, url string) (string, error) {
 	res, err := http.Get(url)
 	if err != nil {
 		log.Println(err)
@@ -139,13 +136,13 @@ func (s server) UploadUrl(url string) (string, error) {
 		}
 	}(res.Body)
 
-	err = bucket.PutObject(sId, res.Body)
+	err = bucket.PutObject(path, res.Body)
 	if err != nil {
 		log.Println(err)
 		return "", err
 	}
 
-	return s.GetURL(sId), nil
+	return path, nil
 }
 
 func (s Server) Run() {
