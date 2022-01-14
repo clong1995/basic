@@ -29,8 +29,8 @@ type (
 		Pois   []detailPoi `json:"pois"`
 	}
 
-	// DetailPoi 返回数据
-	DetailPoi struct {
+	// DetailPoiRes 返回数据
+	DetailPoiRes struct {
 		Province string `json:"province"` //省
 		City     string `json:"city"`     //市
 		District string `json:"district"` //区
@@ -40,7 +40,7 @@ type (
 	}
 )
 
-func Detail(key, id string) (res []DetailPoi, err error) {
+func Detail(key, id string) (res DetailPoiRes, err error) {
 	resBytes, err := request.HttpGet("https://restapi.amap.com/v3/place/detail", map[string]string{
 		"key": key,
 		"id":  id,
@@ -62,28 +62,29 @@ func Detail(key, id string) (res []DetailPoi, err error) {
 		log.Println(err)
 		return
 	}
+	if len(resp.Pois) <= 0 {
+		err = fmt.Errorf("pois is empty")
+		log.Println(err)
+		return
+	}
 
-	//规范输出
-	//res = []DetailPoi{}
-	for _, poi := range resp.Pois {
-		dp := DetailPoi{
-			Province: poi.PName,
-			City:     poi.CityName,
-			District: poi.AdName,
-			Address:  poi.Address,
-			Place:    poi.Name,
-			Location: "",
+	poi := resp.Pois[0]
+	res = DetailPoiRes{
+		Province: poi.PName,
+		City:     poi.CityName,
+		District: poi.AdName,
+		Address:  poi.Address,
+		Place:    poi.Name,
+		Location: "",
+	}
+	//修正"经,纬"为"纬,经"
+	if poi.Location != "" {
+		location := strings.Split(poi.Location, ",")
+		if len(location) != 2 {
+			err = fmt.Errorf("location error")
+			return
 		}
-		//修正"经,纬"为"纬,经"
-		if poi.Location != "" {
-			location := strings.Split(poi.Location, ",")
-			if len(location) != 2 {
-				err = fmt.Errorf("location error")
-				return
-			}
-			dp.Location = fmt.Sprintf("%s,%s", location[1], location[0])
-		}
-		res = append(res, dp)
+		res.Location = fmt.Sprintf("%s,%s", location[1], location[0])
 	}
 
 	return

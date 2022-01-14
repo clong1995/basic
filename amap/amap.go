@@ -38,7 +38,7 @@ func (s server) Search(keywords, region string) (res []geocode.SearchPoi, err er
 }
 
 //Detail 根据AOI或POI的id查询
-func (s server) Detail(id string) (res []geocode.DetailPoi, err error) {
+func (s server) Detail(id string) (res geocode.DetailPoiRes, err error) {
 	return geocode.Detail(s.server.WebKey, id)
 }
 
