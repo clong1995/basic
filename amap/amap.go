@@ -37,6 +37,11 @@ func (s server) Search(keywords, region string) (res []geocode.SearchPoi, err er
 	return geocode.Search(s.server.WebKey, keywords, region)
 }
 
+//Detail 根据AOI或POI的id查询
+func (s server) Detail(id string) (res []geocode.DetailPoi, err error) {
+	return geocode.Detail(s.server.WebKey, id)
+}
+
 func (s Server) Run() {
 	//防止多次创建
 	if Amap != nil {

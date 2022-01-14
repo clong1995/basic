@@ -431,7 +431,14 @@ func (h Server) Run() {
 		}(s, r)
 	}
 
-	color.Success(fmt.Sprintf("[http] %s listening %s,routes total:%d", h.UserAgent, h.Addr, len(routeList)))
+	color.Success(fmt.Sprintf(
+		"[http] %s listening %s,routes total:%d,ip limit:%g/s/%d",
+		h.UserAgent,
+		h.Addr,
+		len(routeList),
+		h.Rate,
+		h.Burst,
+	))
 	//启动服务
 	server := &http.Server{
 		Addr:           h.Addr,

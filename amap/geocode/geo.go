@@ -1,7 +1,6 @@
 package geocode
 
 import (
-	"basic/fieldCopy"
 	"basic/request"
 	"encoding/json"
 	"errors"
@@ -12,18 +11,8 @@ import (
 
 //地理编码 API 服务地址，名称转坐标，适合精确描述，标志性，如青岛五四广场、山东省青岛市
 //非标志性使用POI
-
 type (
-	GeoRes struct {
-		FormattedAddress string `json:"formatted_address"`
-		Province         string `json:"province"` //省
-		City             string `json:"city"`     //市
-		District         string `json:"district"` //区
-		Township         string `json:"township"` //乡镇/街道
-		Street           string `json:"street"`   //道路
-		Number           string `json:"number"`   //门牌
-		Location         string `json:"location"` //坐标
-	}
+	//解析原始数据
 	geoResp struct {
 		Status   string     `json:"status"` //"1"成功
 		Info     string     `json:"info"`
@@ -34,10 +23,18 @@ type (
 		Province         string      `json:"province"`                   //省
 		City             string      `json:"city"`                       //市
 		District         interface{} `json:"district" deepcopier:"skip"` //区
-		Township         interface{} `json:"township" deepcopier:"skip"` //乡镇/街道
 		Street           interface{} `json:"street" deepcopier:"skip"`   //道路
 		Number           interface{} `json:"number" deepcopier:"skip"`   //门牌
 		Location         string      `json:"location"`                   //坐标 返回值为"经,纬",这是错误的形式，应该为"纬,经"
+	}
+
+	// GeoRes 返回结果
+	GeoRes struct {
+		Province string `json:"province"` //省
+		City     string `json:"city"`     //市
+		District string `json:"district"` //区
+		Address  string `json:"address"`  //街道
+		Location string `json:"location"` //坐标
 	}
 )
 
@@ -66,26 +63,25 @@ func Geo(key, address string) (res GeoRes, err error) {
 
 	if len(resp.Geocodes) > 0 {
 		r := resp.Geocodes[0]
-		err = fieldCopy.FieldFrom(&res, r)
+		/*err = fieldCopy.FieldFrom(&res, r)
 		if err != nil {
 			log.Println(err)
 			return
-		}
+		}*/
+		res.Province = r.Province
+		res.City = r.City
 		//修正District类型
 		if val, ok := r.District.(string); ok {
 			res.District = val
 		}
-		//修正Township类型
-		if val, ok := r.Township.(string); ok {
-			res.Township = val
-		}
+
 		//修正Street类型
 		if val, ok := r.Street.(string); ok {
-			res.Street = val
+			res.Address += val
 		}
 		//修正Number类型
 		if val, ok := r.Number.(string); ok {
-			res.Number = val
+			res.Address += val
 		}
 		//修正"经,纬"为"纬,经"
 		if r.Location != "" {

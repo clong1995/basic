@@ -13,8 +13,9 @@ import (
 //非标志性使用POI
 
 type (
+
 	//解析原始数据
-	searchPoi struct {
+	detailPoi struct {
 		Name     string `json:"name"`
 		Location string `json:"location"` //坐标
 		PName    string `json:"pname"`    //省
@@ -22,35 +23,34 @@ type (
 		AdName   string `json:"adname"`   //区
 		Address  string `json:"address"`  //街道
 	}
-	searchResp struct {
+	detailResp struct {
 		Status string      `json:"status"` //"1"成功
 		Info   string      `json:"info"`
-		Pois   []searchPoi `json:"pois"`
+		Pois   []detailPoi `json:"pois"`
 	}
 
-	//SearchPoi 返回数据
-	SearchPoi struct {
+	// DetailPoi 返回数据
+	DetailPoi struct {
 		Province string `json:"province"` //省
 		City     string `json:"city"`     //市
 		District string `json:"district"` //区
 		Address  string `json:"address"`  //街道
-		Place    string `json:"place"`
+		Place    string `json:"place"`    //名称
 		Location string `json:"location"` //坐标
 	}
 )
 
-func Search(key, keywords, region string) (res []SearchPoi, err error) {
-	resBytes, err := request.HttpGet("https://restapi.amap.com/v5/place/text", map[string]string{
-		"key":      key,
-		"keywords": keywords,
-		"region":   region,
+func Detail(key, id string) (res []DetailPoi, err error) {
+	resBytes, err := request.HttpGet("https://restapi.amap.com/v3/place/detail", map[string]string{
+		"key": key,
+		"id":  id,
 	})
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	//解析
-	resp := new(searchResp)
+	resp := new(detailResp)
 	err = json.Unmarshal(resBytes, resp)
 	if err != nil {
 		log.Println(err)
@@ -62,8 +62,11 @@ func Search(key, keywords, region string) (res []SearchPoi, err error) {
 		log.Println(err)
 		return
 	}
+
+	//规范输出
+	//res = []DetailPoi{}
 	for _, poi := range resp.Pois {
-		sp := SearchPoi{
+		dp := DetailPoi{
 			Province: poi.PName,
 			City:     poi.CityName,
 			District: poi.AdName,
@@ -78,9 +81,9 @@ func Search(key, keywords, region string) (res []SearchPoi, err error) {
 				err = fmt.Errorf("location error")
 				return
 			}
-			sp.Location = fmt.Sprintf("%s,%s", location[1], location[0])
+			dp.Location = fmt.Sprintf("%s,%s", location[1], location[0])
 		}
-		res = append(res, sp)
+		res = append(res, dp)
 	}
 
 	return
