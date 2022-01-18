@@ -32,6 +32,11 @@ func (s server) ReGeoSmart(location string) (res geocode.ReGeoSmartRes, err erro
 	return geocode.ReGeoSmart(s.server.WebKey, location)
 }
 
+//ReGeoSmartList 地理编码 API 服务地址，名称转坐标
+func (s server) ReGeoSmartList(location string) (res geocode.ReGeoSmartListRes, err error) {
+	return geocode.ReGeoSmartList(s.server.WebKey, location)
+}
+
 //Search 搜索
 func (s server) Search(keywords, region string) (res []geocode.SearchPoi, err error) {
 	return geocode.Search(s.server.WebKey, keywords, region)

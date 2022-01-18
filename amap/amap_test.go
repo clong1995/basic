@@ -28,6 +28,7 @@ func Test_server_Geo(t *testing.T) {
 	t.Logf("%+v", res)
 }
 
+//这个不用测试，用不到
 func Test_server_ReGeo(t *testing.T) {
 	Server{
 		WebKey: "",
@@ -45,6 +46,18 @@ func Test_server_ReGeoSmart(t *testing.T) {
 		WebKey: "",
 	}.Run()
 	res, err := Amap.ReGeoSmart("31.298091,120.633647")
+	if err != nil {
+		t.Errorf(err.Error())
+		return
+	}
+	t.Logf("%+v", res)
+}
+
+func Test_server_ReGeoSmartList(t *testing.T) {
+	Server{
+		WebKey: "",
+	}.Run()
+	res, err := Amap.ReGeoSmartList("31.298091,120.633647")
 	if err != nil {
 		t.Errorf(err.Error())
 		return
