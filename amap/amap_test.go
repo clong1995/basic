@@ -45,7 +45,7 @@ func Test_server_ReGeoSmart(t *testing.T) {
 	Server{
 		WebKey: "",
 	}.Run()
-	res, err := Amap.ReGeoSmart("31.298091,120.633647")
+	res, err := Amap.ReGeoSmart("36.308863,120.439877")
 	if err != nil {
 		t.Errorf(err.Error())
 		return
@@ -57,7 +57,7 @@ func Test_server_ReGeoSmartList(t *testing.T) {
 	Server{
 		WebKey: "",
 	}.Run()
-	res, err := Amap.ReGeoSmartList("31.298091,120.633647")
+	res, err := Amap.ReGeoSmartList("36.308863,120.439877")
 	if err != nil {
 		t.Errorf(err.Error())
 		return

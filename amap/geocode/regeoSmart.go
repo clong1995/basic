@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -43,9 +45,12 @@ type (
 	}
 
 	poiSmart struct {
-		Name     string `json:"name"`
-		Address  string `json:"address"`
-		Location string `json:"location"`
+		Name      string      `json:"name"`
+		IAddress  interface{} `json:"address"`
+		Address   string
+		Location  string `json:"location"`
+		ODistance string `json:"distance"`
+		Distance  float64
 	}
 
 	PoiSmartItem struct {
@@ -140,7 +145,9 @@ func ReGeoSmart(key, location string) (res ReGeoSmartRes, err error) {
 	//POI
 	if len(resp.ReGeocode.Pois) > 0 {
 		poi := resp.ReGeocode.Pois[0]
+
 		res.Address = poi.Address
+
 		res.Place = poi.Name
 		arr := strings.Split(poi.Location, ",")
 		if len(arr) == 2 {
@@ -205,6 +212,22 @@ func _ReGeoSmart(key, location string) (resp reGeoSmartRes, err error) {
 	if val, ok := resp.ReGeocode.AddressComponent.ITownship.(string); ok {
 		resp.ReGeocode.AddressComponent.Township = val
 	}
+	for i, poi := range resp.ReGeocode.Pois {
+		if val, ok := poi.IAddress.(string); ok {
+			resp.ReGeocode.Pois[i].Address = val
+		}
+		if f, fErr := strconv.ParseFloat(poi.ODistance, 64); fErr == nil {
+			resp.ReGeocode.Pois[i].Distance = f
+		}
+	}
+
+	//根据距离排序
+	sort.Slice(resp.ReGeocode.Pois, func(i, j int) bool {
+		if resp.ReGeocode.Pois[i].Distance < resp.ReGeocode.Pois[j].Distance {
+			return true
+		}
+		return false
+	})
 
 	return
 }
