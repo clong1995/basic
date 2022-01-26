@@ -10,17 +10,21 @@ import (
 type (
 	// Task 一个路由的结构
 	Task struct {
-		Spec string
-		Name string
+		Spec      string
+		Name      string
+		Immediate bool
 	}
 
-	taskMap map[string]*cron.Cron
+	taskMap       map[string]*cron.Cron
+	taskImmediate []func()
 )
 
 var tasks taskMap
+var tasksImmediate taskImmediate
 
 func init() {
 	tasks = taskMap{}
+	tasksImmediate = taskImmediate{}
 }
 
 // Register 注册任务
@@ -42,6 +46,9 @@ func (t Task) Register(cmd func()) {
 	}
 	c.Start()
 	tasks[t.Name] = c
+	if t.Immediate {
+		tasksImmediate = append(tasksImmediate, cmd)
+	}
 }
 
 // Cancel 取消
@@ -53,10 +60,20 @@ func (t Task) Cancel() {
 	log.Println(fmt.Sprintf("[%s]任务不存在", t.Name))
 }
 
-// Run 当主协程能自己维持的化，block不用开启
+// Run 当主协程能自己维持，block不用开启
+// names 要立即执行的任务
 func Run(block bool) {
 	color.Success(fmt.Sprintf("[task] start success，tasks total: %d", len(tasks)))
+	if len(tasksImmediate) > 0 {
+		for _, task := range tasksImmediate {
+			task()
+		}
+	}
 	if block {
 		select {}
 	}
 }
+
+//参考cron
+//https://segmentfault.com/a/1190000039647260
+//https://blog.csdn.net/qq_39135287/article/details/95664533?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.control
