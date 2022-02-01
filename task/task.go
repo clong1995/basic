@@ -8,11 +8,17 @@ import (
 )
 
 type (
+	Server struct {
+		Block bool //当主协程能自己维持，block不用开启
+	}
+)
+
+type (
 	// Task 一个路由的结构
 	Task struct {
 		Spec      string
 		Name      string
-		Immediate bool
+		Immediate bool //要立即执行的任务
 	}
 
 	taskMap       map[string]*cron.Cron
@@ -60,16 +66,14 @@ func (t Task) Cancel() {
 	log.Println(fmt.Sprintf("[%s]任务不存在", t.Name))
 }
 
-// Run 当主协程能自己维持，block不用开启
-// names 要立即执行的任务
-func Run(block bool) {
+func (s Server) Run() {
 	color.Success(fmt.Sprintf("[task] start success，tasks total: %d", len(tasks)))
 	if len(tasksImmediate) > 0 {
 		for _, task := range tasksImmediate {
 			task()
 		}
 	}
-	if block {
+	if s.Block {
 		select {}
 	}
 }
