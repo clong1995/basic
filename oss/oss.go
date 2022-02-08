@@ -123,14 +123,15 @@ func (s server) UploadBase64(path, value string) (string, error) {
 	return path, nil
 }
 
+// UploadUrl 上传url
 func (s server) UploadUrl(path, url string) (string, error) {
 	res, err := http.Get(url)
 	if err != nil {
 		log.Println(err)
 		return "", err
 	}
-	defer func(Body io.ReadCloser) {
-		err = Body.Close()
+	defer func(body io.ReadCloser) {
+		err = body.Close()
 		if err != nil {
 			log.Println(err)
 		}

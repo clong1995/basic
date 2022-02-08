@@ -431,9 +431,21 @@ func (h Server) Run() {
 		}(s, r)
 	}
 
+	ips, err := ip.BoundLocalIP()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	if len(ips) == 0 {
+		err = fmt.Errorf("no ip")
+		log.Println(err)
+		return
+	}
+
 	color.Success(fmt.Sprintf(
-		"[http] %s listening %s,routes total:%d,ip limit:%g/s/%d",
+		"[http] %s listening http://%s%s ,routes total:%d,ip limit:%g/s/%d",
 		h.UserAgent,
+		ips[0],
 		h.Addr,
 		len(routeList),
 		h.Rate,
@@ -447,7 +459,7 @@ func (h Server) Run() {
 		MaxHeaderBytes: h.MaxHeaderBytes,
 		Handler:        mux,
 	}
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Println("[http] Listen error!")
 	}
