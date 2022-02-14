@@ -83,7 +83,7 @@ func (s Server) Run() {
 	}
 
 	var sqlErr error
-	mysqlDB, sqlErr = sql.Open("mysql", s.DataSource+"?charset=utf8mb4&loc=Asia%2FShanghai&parseTime=true")
+	mysqlDB, sqlErr = sql.Open("mysql", s.DataSource+"?charset=utf8mb4&loc=Asia%2FShanghai&parseTime=true&multiStatements=true")
 	if sqlErr != nil {
 		log.Fatalln(color.Red, sqlErr, color.Reset)
 	}

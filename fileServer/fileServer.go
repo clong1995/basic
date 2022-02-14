@@ -66,7 +66,6 @@ func (s Server) Run() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println(filePath)
 		//创建文件
 		//var file *os.File
 		file, err := os.Create(filePath)
