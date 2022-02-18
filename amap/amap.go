@@ -38,8 +38,8 @@ func (s server) ReGeoSmartList(location string) (res geocode.ReGeoSmartListRes, 
 }
 
 //Search 搜索
-func (s server) Search(keywords, region string) (res []geocode.SearchPoi, err error) {
-	return geocode.Search(s.server.WebKey, keywords, region)
+func (s server) Search(keywords, types, region string) (res []geocode.SearchPoi, err error) {
+	return geocode.Search(s.server.WebKey, keywords, types, region)
 }
 
 //Detail 根据AOI或POI的id查询
