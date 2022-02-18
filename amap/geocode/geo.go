@@ -39,6 +39,9 @@ type (
 )
 
 func Geo(key, address string) (res GeoRes, err error) {
+	address = strings.ReplaceAll(address, "市辖区", "")
+	address = strings.ReplaceAll(address, "县", "")
+
 	resBytes, err := request.HttpGet("https://restapi.amap.com/v3/geocode/geo", map[string]string{
 		"key":     key,
 		"address": address,

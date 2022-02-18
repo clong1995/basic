@@ -22,17 +22,17 @@ func (s server) Geo(address string) (res geocode.GeoRes, err error) {
 	return geocode.Geo(s.server.WebKey, address)
 }
 
-//ReGeo 地理编码 API 服务地址，名称转坐标
+//ReGeo 地理编码 API 服务地址，坐标转名称
 func (s server) ReGeo(location string) (geocodes geocode.ReGeocode, err error) {
 	return geocode.ReGeo(s.server.WebKey, location)
 }
 
-//ReGeoSmart 地理编码 API 服务地址，名称转坐标
+//ReGeoSmart 地理编码 API 服务地址，坐标转名称
 func (s server) ReGeoSmart(location string) (res geocode.ReGeoSmartRes, err error) {
 	return geocode.ReGeoSmart(s.server.WebKey, location)
 }
 
-//ReGeoSmartList 地理编码 API 服务地址，名称转坐标
+//ReGeoSmartList 地理编码 API 服务地址，坐标转名称
 func (s server) ReGeoSmartList(location string) (res geocode.ReGeoSmartListRes, err error) {
 	return geocode.ReGeoSmartList(s.server.WebKey, location)
 }
