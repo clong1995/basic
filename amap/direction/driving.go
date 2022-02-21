@@ -94,37 +94,24 @@ func DrivingPolyline(key, origin, destination string) (res DrivingPolylines, err
 		return
 	}
 	paths := driving.Route.Paths
-	//加入起点
-	originArr := strings.Split(origin, ",")
-	res = append(res, [][2]string{})
 	if len(paths) == 0 {
-		//加入终点
-		res = append(res, [][2]string{
-			{
-				originArr[1],
-				originArr[0],
-			},
-		})
 		return
 	}
-	destinationArr := strings.Split(destination, ",")
-	destinationEnd := [][2]string{
-		{
-			destinationArr[1],
-			destinationArr[0],
-		},
-	}
-
-	defer func() {
-		res = append(res, destinationEnd)
-	}()
 
 	steps := paths[0].Steps
 	if len(steps) == 0 {
-		res = append(res, destinationEnd)
 		return
 	}
 
+	//起点
+	originArr := strings.Split(origin, ",")
+	res = append(res, [][2]string{
+		{
+			originArr[1],
+			originArr[0],
+		},
+	})
+	//中间点
 	for _, step := range steps {
 		polyline := step.Polyline
 		if polyline == "" {
@@ -143,5 +130,13 @@ func DrivingPolyline(key, origin, destination string) (res DrivingPolylines, err
 		res = append(res, ps)
 	}
 
+	//终点
+	destinationArr := strings.Split(destination, ",")
+	res = append(res, [][2]string{
+		{
+			destinationArr[1],
+			destinationArr[0],
+		},
+	})
 	return
 }

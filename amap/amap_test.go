@@ -91,7 +91,7 @@ func Test_server_DrivingPolyline(t *testing.T) {
 	Server{
 		WebKey: "",
 	}.Run()
-	res, err := Amap.DrivingPolyline("31.31051992036949,120.568425976941", "31.28734574699563,120.50422462305886")
+	res, err := Amap.DrivingPolyline("39.90920999352365,116.39739791108934", "39.8819159595503,116.41078749826261")
 	if err != nil {
 		t.Errorf(err.Error())
 		return
