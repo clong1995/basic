@@ -1,4 +1,4 @@
-package geocode
+package regeo
 
 import (
 	"basic/request"

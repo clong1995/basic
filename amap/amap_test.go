@@ -69,7 +69,7 @@ func Test_server_Search(t *testing.T) {
 	Server{
 		WebKey: "",
 	}.Run()
-	res, err := Amap.Search("拙政园", "苏州市")
+	res, err := Amap.Search("拙政园", "", "苏州市")
 	if err != nil {
 		t.Errorf(err.Error())
 		return
@@ -77,4 +77,24 @@ func Test_server_Search(t *testing.T) {
 	t.Logf("%+v", res)
 }
 
-//13611248094 杨
+func Test_server_Driving(t *testing.T) {
+	Server{
+		WebKey: "",
+	}.Run()
+	_, err := Amap.Driving("31.432890,120.577894", "31.415495,120.566179")
+	if err != nil {
+		t.Errorf(err.Error())
+		return
+	}
+}
+func Test_server_DrivingPolyline(t *testing.T) {
+	Server{
+		WebKey: "",
+	}.Run()
+	res, err := Amap.DrivingPolyline("31.31051992036949,120.568425976941", "31.28734574699563,120.50422462305886")
+	if err != nil {
+		t.Errorf(err.Error())
+		return
+	}
+	t.Logf("%+v", res)
+}

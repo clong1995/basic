@@ -1,4 +1,4 @@
-package geocode
+package search
 
 import (
 	"basic/request"
