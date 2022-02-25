@@ -53,23 +53,23 @@ func (s server) Info(id int64) (map[string]interface{}, error) {
 }
 
 // Decrypt 解码id
-func (s server) Decrypt(str string) (map[string]interface{}, error) {
+func (s server) Decrypt(str string) (info map[string]interface{}, err error) {
 	id := cipher.Base64DecryptBytesInt(str)
-	info, err := s.Info(id)
+	info, err = s.Info(id)
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return
 	}
 	info["id"] = strconv.FormatInt(id, 10)
-	return info, nil
+	return
 }
 
 // Encrypt 编码id
-func (s server) Encrypt(idStr string) (interface{}, error) {
+func (s server) Encrypt(idStr string) (str string, err error) {
 	int64Num, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return
 	}
 	return cipher.Base64EncryptInt64(int64Num), nil
 }
