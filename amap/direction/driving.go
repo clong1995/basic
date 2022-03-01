@@ -33,12 +33,14 @@ type (
 		Route  DrivingRoute `json:"route"`
 	}
 
-	DrivingPolylines [][][2]string
+	DrivingPolylines [][2]string //[[经度,纬度],[经度,纬度],[经度,纬度]...]
 )
 
 // Driving 行车基础信息
 func Driving(key, origin, destination string) (res DrivingResp, err error) {
-	//反转
+	if origin == "" || destination == "" {
+		return
+	}
 	//起点
 	originArr := strings.Split(origin, ",")
 	origin = ""
@@ -105,11 +107,9 @@ func DrivingPolyline(key, origin, destination string) (res DrivingPolylines, err
 
 	//起点
 	originArr := strings.Split(origin, ",")
-	res = append(res, [][2]string{
-		{
-			originArr[1],
-			originArr[0],
-		},
+	res = append(res, [2]string{
+		originArr[1],
+		originArr[0],
 	})
 	//中间点
 	for _, step := range steps {
@@ -117,26 +117,47 @@ func DrivingPolyline(key, origin, destination string) (res DrivingPolylines, err
 		if polyline == "" {
 			continue
 		}
-		var ps [][2]string
 		polylineArr := strings.Split(polyline, ";")
 		for _, pol := range polylineArr {
 			if pol != "" {
 				polArr := strings.Split(pol, ",")
 				if len(polArr) == 2 {
-					ps = append(ps, [2]string{polArr[0], polArr[1]})
+					res = append(res, [2]string{polArr[0], polArr[1]})
 				}
 			}
 		}
-		res = append(res, ps)
 	}
 
 	//终点
 	destinationArr := strings.Split(destination, ",")
-	res = append(res, [][2]string{
-		{
-			destinationArr[1],
-			destinationArr[0],
-		},
+	res = append(res, [2]string{
+		destinationArr[1],
+		destinationArr[0],
 	})
+	return
+}
+
+// DrivingPointsPolyline 返回一串坐标的Polyline,[points]参数用,和;隔开
+func DrivingPointsPolyline(key, points string) (res DrivingPolylines, err error) {
+	pointList := strings.Split(points, ";")
+	if len(pointList) < 2 {
+		//少于两个点
+		return
+	}
+
+	for i := range pointList {
+		start := i
+		end := i + 1
+		if end == len(pointList) { //到了结尾
+			break
+		}
+		var polyline DrivingPolylines
+		polyline, err = DrivingPolyline(key, pointList[start], pointList[end])
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		res = append(res, polyline...)
+	}
 	return
 }

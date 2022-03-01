@@ -53,14 +53,19 @@ func (s server) Detail(id string) (res search.DetailPoiRes, err error) {
 	return search.Detail(s.server.WebKey, id)
 }
 
-//Driving 行车规划
+//Driving 行车规划基础信息
 func (s server) Driving(region, destination string) (res direction.DrivingResp, err error) {
 	return direction.Driving(s.server.WebKey, region, destination)
 }
 
-//DrivingPolyline 行车规划
+//DrivingPolyline 行车规划polyline
 func (s server) DrivingPolyline(region, destination string) (res direction.DrivingPolylines, err error) {
 	return direction.DrivingPolyline(s.server.WebKey, region, destination)
+}
+
+//DrivingPointsPolyline 返回一串坐标的Polyline,[points]参数用,和;隔开
+func (s server) DrivingPointsPolyline(points string) (res direction.DrivingPolylines, err error) {
+	return direction.DrivingPointsPolyline(s.server.WebKey, points)
 }
 
 func (s Server) Run() {

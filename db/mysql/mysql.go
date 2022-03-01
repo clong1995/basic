@@ -36,7 +36,6 @@ func (s server) TxEnd(tx *sql.Tx, err error) {
 	}
 	var endErr error
 	if err != nil {
-		//log.Println("tx rollback!")
 		endErr = tx.Rollback()
 	} else {
 		endErr = tx.Commit()

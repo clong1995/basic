@@ -175,21 +175,21 @@ func (h Server) Run() {
 				ipItem := iPLimiter.ipLimiter(realIp)
 				if ipItem.count > maxRequestCount { //高频ip
 					errStr := fmt.Sprintf("%s判定为高频请求ip", realIp)
-					log.Println(errStr)
+					fmt.Println(errStr)
 					http.Error(w, errStr, http.StatusTooManyRequests)
 					return
 				}
 				//限流
 				/*err := ipItem.limiter.Wait(context.Background())
 				if err != nil {
-					log.Printf("%s : %s\n", pattern, err)
+					log.Printf("%s : %s", pattern, err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}*/
 				if !ipItem.limiter.Allow() {
 					//抛弃多余流量
 					errStr := fmt.Sprintf("%s请求过快", realIp)
-					log.Println(errStr)
+					fmt.Println(errStr)
 					http.Error(w, errStr, http.StatusTooManyRequests)
 					return
 				}
@@ -217,8 +217,8 @@ func (h Server) Run() {
 				if h.UserAgent != "" && route.Pattern.UserAgent == Enable {
 					acc := header.Get("User-Agent")
 					if acc != "dev tool" && acc != h.UserAgent {
-						errStr := fmt.Sprintf("%s : %s\n", pattern, "User-Agent 错误")
-						log.Println(errStr)
+						errStr := fmt.Sprintf("%s : %s", pattern, "User-Agent 错误")
+						fmt.Println(errStr)
 						http.Error(w, errStr, http.StatusForbidden)
 						return
 					}
@@ -229,8 +229,8 @@ func (h Server) Run() {
 				if route.Pattern.Auth == Enable {
 					//有认证必须要校验签名
 					if sig == "" {
-						errStr := fmt.Sprintf("%s : %s\n", pattern, "缺少数据签名")
-						log.Println(errStr)
+						errStr := fmt.Sprintf("%s : %s", pattern, "缺少数据签名")
+						fmt.Println(errStr)
 						http.Error(w, errStr, http.StatusForbidden)
 						return
 					}
@@ -257,8 +257,8 @@ func (h Server) Run() {
 					//TODO 论证这里会不会有错
 					paramByte, err = json.Marshal(m)
 					if err != nil {
-						errStr := fmt.Sprintf("%s : %s\n", pattern, "读取url参数错误")
-						log.Println(errStr)
+						errStr := fmt.Sprintf("%s : %s", pattern, "读取url参数错误")
+						fmt.Println(errStr)
 						http.Error(w, errStr, http.StatusInternalServerError)
 						return
 					}
@@ -267,8 +267,8 @@ func (h Server) Run() {
 					r.Body = http.MaxBytesReader(w, r.Body, int64(h.MaxPayloadBytes))
 					paramByte, err = ioutil.ReadAll(r.Body)
 					if err != nil {
-						errStr := fmt.Sprintf("%s : %s\n", pattern, "读取body错误")
-						log.Println(errStr)
+						errStr := fmt.Sprintf("%s : %s", pattern, "读取body错误")
+						fmt.Println(errStr)
 						http.Error(w, errStr, http.StatusRequestEntityTooLarge)
 						return
 					}
@@ -282,15 +282,15 @@ func (h Server) Run() {
 						a := &auth{}
 						err = json.Unmarshal(paramByte, a)
 						if err != nil {
-							errStr := fmt.Sprintf("%s : %s\n", pattern, err)
-							log.Println(errStr)
+							errStr := fmt.Sprintf("%s : %s", pattern, err)
+							fmt.Println(errStr)
 							http.Error(w, errStr, http.StatusInternalServerError)
 							return
 						}
 
 						if a.Token == "" {
-							errStr := fmt.Sprintf("%s : %s\n", pattern, "缺少令牌")
-							log.Println(errStr)
+							errStr := fmt.Sprintf("%s : %s", pattern, "缺少令牌")
+							fmt.Println(errStr)
 							http.Error(w, errStr, http.StatusNotAcceptable)
 							return
 						}
@@ -299,8 +299,8 @@ func (h Server) Run() {
 						tk := token.Token{}
 						err = tk.Decode(a.Token)
 						if err != nil {
-							errStr := fmt.Sprintf("%s : %s\n", pattern, "令牌错误")
-							log.Println(errStr)
+							errStr := fmt.Sprintf("%s : %s", pattern, "令牌错误")
+							fmt.Println(errStr)
 							http.Error(w, errStr, http.StatusNotAcceptable)
 							return
 						}
@@ -310,14 +310,14 @@ func (h Server) Run() {
 
 						//校验签名
 						if !checkSign(sig, paramByte, ak) {
-							errStr := fmt.Sprintf("%s : %s\n", pattern, "指纹检验失败")
-							log.Println(errStr)
+							errStr := fmt.Sprintf("%s : %s", pattern, "指纹检验失败")
+							fmt.Println(errStr)
 							http.Error(w, errStr, http.StatusNotAcceptable)
 							return
 						}
 					} else {
-						errStr := fmt.Sprintf("%s : %s\n", pattern, "body为空")
-						log.Println(errStr)
+						errStr := fmt.Sprintf("%s : %s", pattern, "body为空")
+						fmt.Println(errStr)
 						http.Error(w, errStr, http.StatusNoContent)
 						return
 					}
@@ -338,8 +338,8 @@ func (h Server) Run() {
 				// 通用不格式直接写出
 				if route.Pattern.General == Enable {
 					if err != nil {
-						errStr := fmt.Sprintf("%s : %s\n", pattern, err)
-						log.Println(errStr)
+						errStr := fmt.Sprintf("%s : %s", pattern, err)
+						fmt.Println(errStr)
 						http.Error(w, errStr, http.StatusInternalServerError)
 						return
 					}
@@ -354,7 +354,7 @@ func (h Server) Run() {
 					case []byte:
 					default:
 						errStr := fmt.Sprintf("%v is not []byte or []uint8", value)
-						log.Println(errStr)
+						fmt.Println(errStr)
 						http.Error(w, errStr, http.StatusInternalServerError)
 						return
 					}
@@ -368,14 +368,15 @@ func (h Server) Run() {
 					enc := gob.NewEncoder(&buf)
 					err = enc.Encode(result)
 					if err != nil {
-						log.Printf("%s : %s\n", pattern, err)
+						log.Printf("%s : %s", pattern, err)
 						w.WriteHeader(http.StatusInternalServerError)
 						return
 					}
 					_, err = w.Write(buf.Bytes())*/
 
 					if err != nil {
-						log.Printf("%s : %s\n", pattern, err)
+						errStr := fmt.Sprintf("%s : %s", pattern, err)
+						fmt.Println(errStr)
 						return
 					}
 					return
@@ -384,7 +385,8 @@ func (h Server) Run() {
 				// 处理结果
 				var jsonBytes []byte
 				if err != nil {
-					fmt.Printf("%s : %s", pattern, err)
+					errStr := fmt.Sprintf("%s : %s", pattern, err)
+					fmt.Println(errStr)
 					jsonBytes, err = json.Marshal(response{
 						err.Error(),
 						nil,
@@ -398,9 +400,9 @@ func (h Server) Run() {
 
 				//json错误
 				if err != nil {
-					errStr := fmt.Sprintf("%s : %s\n", pattern, err)
+					errStr := fmt.Sprintf("%s : %s", pattern, err)
 					http.Error(w, errStr, http.StatusInternalServerError)
-					log.Println(errStr)
+					fmt.Println(errStr)
 					return
 				}
 
@@ -419,7 +421,8 @@ func (h Server) Run() {
 				//写出结果
 				_, err = w.Write(jsonBytes)
 				if err != nil {
-					log.Printf("%s : %s\n", pattern, err)
+					errStr := fmt.Sprintf("%s : %s", pattern, err)
+					log.Println(errStr)
 					return
 				}
 

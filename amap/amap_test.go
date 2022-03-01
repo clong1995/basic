@@ -98,3 +98,15 @@ func Test_server_DrivingPolyline(t *testing.T) {
 	}
 	t.Logf("%+v", res)
 }
+
+func Test_server_DrivingPointsPolyline(t *testing.T) {
+	Server{
+		WebKey: "",
+	}.Run()
+	res, err := Amap.DrivingPointsPolyline("39.8819159595503,116.41078749826261;39.87981240581741,116.43825331810524;39.865478942122955,116.42881194253437")
+	if err != nil {
+		t.Errorf(err.Error())
+		return
+	}
+	t.Logf("%+v", res)
+}
