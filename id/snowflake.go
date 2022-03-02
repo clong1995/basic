@@ -2,12 +2,10 @@
 package id
 
 import (
-	"basic/cipher"
 	"basic/color"
 	"fmt"
 	"github.com/bwmarrin/snowflake"
 	"log"
-	"strconv"
 	"time"
 )
 
@@ -26,7 +24,7 @@ type (
 
 //String 获取string id
 func (s server) String() string {
-	return s.ToString(s.Int())
+	return sNode.Generate().Base58()
 }
 
 // Int 获取 int id
@@ -36,42 +34,55 @@ func (s server) Int() int64 {
 
 // ToString int转string
 func (s server) ToString(id int64) string {
-	return cipher.Base64EncryptInt64(id)
+	sId := snowflake.ParseInt64(id)
+	return sId.Base58()
 }
 
 func (s server) ToInt(id string) int64 {
-	return cipher.Base64DecryptBytesInt(id)
+	sID, err := snowflake.ParseBase58([]byte(id))
+	if err != nil {
+		log.Println(err)
+		return 0
+	}
+
+	return sID.Int64()
+}
+
+// Test 测试函数
+func (s server) Test() {
+	//base58
+	b58 := s.String()
+	log.Println(b58)
+
+	//base58 to int64
+	i64 := s.ToInt(b58)
+	log.Println(i64)
+
+	//int64 to base58
+	b58 = s.ToString(i64)
+	log.Println(b58)
+
+	log.Println("================")
+
+	//int64
+	i64 = s.Int()
+	log.Println(i64)
+	//int64 to base58
+	b58 = s.ToString(i64)
+	log.Println(b58)
+	//base58 to int64
+	i64 = s.ToInt(b58)
+	log.Println(i64)
 }
 
 // Info id信息
+// DEPRECATED: the below function will be removed in a future release.
 func (s server) Info(id int64) (map[string]interface{}, error) {
 	sId := snowflake.ParseInt64(id)
 	tm := time.Unix(sId.Time()/1000, 0)
 	return map[string]interface{}{
 		"time": tm.Format("2006-01-02 15:04:05"),
 	}, nil
-}
-
-// Decrypt 解码id
-func (s server) Decrypt(str string) (info map[string]interface{}, err error) {
-	id := cipher.Base64DecryptBytesInt(str)
-	info, err = s.Info(id)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	info["id"] = strconv.FormatInt(id, 10)
-	return
-}
-
-// Encrypt 编码id
-func (s server) Encrypt(idStr string) (str string, err error) {
-	int64Num, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	return cipher.Base64EncryptInt64(int64Num), nil
 }
 
 func (s Server) Run() {

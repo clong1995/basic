@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestToString(t *testing.T) {
+func TestToTest(t *testing.T) {
 	Server{
 		Node: 1,
 	}.Run()
@@ -18,6 +18,7 @@ func TestToString(t *testing.T) {
 		t.Log(id)
 	}*/
 
-	strId := SId.ToString(1497024880686665728)
-	t.Log(strId)
+	/*strId := SId.ToString(1497024880686665728)
+	t.Log(strId)*/
+	SId.Test()
 }
