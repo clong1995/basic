@@ -68,6 +68,11 @@ func (s server) DrivingPointsPolyline(points string) (res direction.DrivingPolyl
 	return direction.DrivingPointsPolyline(s.server.WebKey, points)
 }
 
+//ReGeoContains 返回一串坐标的Polyline,[points]参数用,和;隔开
+func (s server) ReGeoContains(location, address string) (res bool, err error) {
+	return regeo2.ReGeoContains(s.server.WebKey, location, address)
+}
+
 func (s Server) Run() {
 	//防止多次创建
 	if Amap != nil {
