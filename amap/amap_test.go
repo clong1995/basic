@@ -113,9 +113,12 @@ func Test_server_DrivingPointsPolyline(t *testing.T) {
 
 func Test_server_ReGeoContains(t *testing.T) {
 	Server{
-		WebKey: "",
+		WebKey: "795a1e457bfe4ff6d12cadc518ad7649",
 	}.Run()
-	res, err := Amap.ReGeoContains("39.909167,116.397441", "北京市东城区")
+	res, err := Amap.ReGeoContains("39.909167,116.397441", []string{
+		"北京市东城区",
+		"北京市西城区",
+	})
 	if err != nil {
 		t.Errorf(err.Error())
 		return

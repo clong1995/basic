@@ -69,7 +69,7 @@ func (s server) DrivingPointsPolyline(points string) (res direction.DrivingPolyl
 }
 
 //ReGeoContains 返回一串坐标的Polyline,[points]参数用,和;隔开
-func (s server) ReGeoContains(location, address string) (res bool, err error) {
+func (s server) ReGeoContains(location string, address []string) (res bool, err error) {
 	return regeo2.ReGeoContains(s.server.WebKey, location, address)
 }
 
