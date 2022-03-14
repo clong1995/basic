@@ -19,11 +19,26 @@ import (
 	"time"
 )
 
-//原始数据
-/*type original struct {
+//返回数据格式
+/*
+type original struct {
 	Data      string `json:"d"`
 	Signature string `json:"s"`
-}*/
+}
+*/
+
+//收到数据格式
+/*
+head:{
+	"Content-Hmac":"signature",
+}
+body: {
+	"t":"token",
+	"d":"deviceId",
+	"aaa":"bbb",
+	"ccc":"ddd"
+}
+*/
 
 const (
 	contentSign     = "Content-Sign"   //指纹
@@ -464,6 +479,6 @@ func (h Server) Run() {
 	}
 	err = server.ListenAndServe()
 	if err != nil {
-		log.Println("[http] Listen error!")
+		log.Println("[http] Listen error!", err)
 	}
 }
