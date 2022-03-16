@@ -55,13 +55,14 @@ const (
 	writeWait = 10 * time.Second
 
 	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
+	pongWait = 10 * time.Second
 
 	// Send pings to peer with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
 )
 
 func (s Server) Run() {
+
 	//当不配置的时候，使用以下默认配置
 	if s.Addr == "" {
 		s.Addr = ":80"
@@ -78,7 +79,8 @@ func (s Server) Run() {
 		WriteBufferSize:   s.WriteBufferSize,
 		EnableCompression: true,
 		CheckOrigin: func(r *http.Request) bool {
-			return s.Origin
+			//return s.Origin
+			return true
 		},
 	}
 
@@ -86,63 +88,67 @@ func (s Server) Run() {
 	onClose = s.OnClose
 	onMessage = s.OnMessage
 
+	clients = make(map[int64]*client)
+
 	//s:签名
 	//t:token
 	//sec:秒时间戳
 	//d:数据
-	//签名的数据为 t+d
-	//s=signature&t=token&ts=xxxx&d=p,c,d
+	//签名的数据为 sec+t+d
+	//s=signature&t=token&sec=xxxx&d=p,c,d
 	sh := func(w http.ResponseWriter, r *http.Request) {
-
 		//解析参数
 		var m = make(map[string]string)
 		for key, value := range r.URL.Query() {
 			m[key] = value[0]
 		}
+		if len(m) == 0 {
+			log.Println("param is empty")
+			return
+		}
 
 		//检查超过时间
+		sec := ""
 		if value, ok := m["sec"]; ok {
-			if !ok {
-				log.Println("ts is empty")
-				return
-			}
-			sec, err := strconv.ParseInt(value, 10, 64)
+			sec = value
+			i64, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				log.Println(err)
 				return
 			}
-			if time.Now().Unix()-sec > 10 {
+
+			if time.Now().Unix()-i64 > 15 {
 				log.Println("connection time out")
 				return
 			}
+		} else {
+			log.Println("sec is empty")
+			return
 		}
 
 		//签名
 		signature := ""
 		if value, ok := m["s"]; ok {
-			if !ok {
-				log.Println("s is empty")
-				return
-			}
 			signature = value
+		} else {
+			log.Println("s is empty")
+			return
 		}
 		//token
 		token_ := ""
 		if value, ok := m["t"]; ok {
-			if !ok {
-				log.Println("t is empty")
-				return
-			}
 			token_ = value
+		} else {
+			log.Println("t is empty")
+			return
 		}
 		//数据
 		data := ""
 		if value, ok := m["d"]; ok {
-			if !ok {
-				log.Println("d is empty")
-				return
-			}
 			data = value
+		} else {
+			log.Println("d is empty")
+			return
 		}
 
 		//提取token信息
@@ -155,7 +161,7 @@ func (s Server) Run() {
 
 		//检查签名
 		var buffer bytes.Buffer
-		buffer.Write([]byte(token_ + data))
+		buffer.Write([]byte(sec + token_ + data))
 		buffer.Write([]byte(tk.AccessKeyID()))
 		sum := md5.Sum(buffer.Bytes())
 		if signature != hex.EncodeToString(sum[:]) {
@@ -173,7 +179,7 @@ func (s Server) Run() {
 		//创建新的链接
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Println("Upgrade:", err)
+			log.Println(err)
 			return
 		}
 		if err = conn.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
@@ -181,6 +187,7 @@ func (s Server) Run() {
 			return
 		}
 		conn.SetPongHandler(func(string) error {
+			log.Println("pong handler")
 			return conn.SetReadDeadline(time.Now().Add(pongWait))
 		})
 
@@ -205,10 +212,12 @@ func (s Server) Run() {
 		//启动每一个conn
 		go c.pump()
 	}
-	http.HandleFunc("/", sh)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", sh)
+	//http.HandleFunc("/", sh)
 
 	go func() {
-		err := http.ListenAndServe(s.Addr, nil)
+		err := http.ListenAndServe(s.Addr, mux)
 		if err != nil {
 			log.Println("[ws] Listen error!", err)
 			return
@@ -293,6 +302,7 @@ func (c *client) pump() {
 					close(done)
 					return
 				}
+				log.Println("ping message")
 			case <-done:
 				return
 			}
@@ -313,6 +323,7 @@ func (c *client) close() {
 	if _, ok := clients[c.userId]; ok {
 		delete(clients, c.userId)
 	}
+	log.Println("close conn")
 }
 
 func (c *client) send(data []byte) (err error) {

@@ -45,7 +45,7 @@ func (s Server) Run() {
 	storagePath := fmt.Sprintf("%s/%s", home, s.BucketName)
 
 	//上传
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	upload := func(w http.ResponseWriter, r *http.Request) {
 		//关闭
 		defer func() {
 			_ = r.Body.Close()
@@ -103,9 +103,9 @@ func (s Server) Run() {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-	})
+	}
 	//下载
-	http.HandleFunc("/image/", func(w http.ResponseWriter, r *http.Request) {
+	download := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -125,10 +125,14 @@ func (s Server) Run() {
 			return
 		}
 		return
-	})
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", upload)
+	mux.HandleFunc("/image/", download)
 
 	go func() {
-		err := http.ListenAndServe(s.Endpoint, nil)
+		err := http.ListenAndServe(s.Endpoint, mux)
 		if err != nil {
 			log.Fatalln(color.Red, err, color.Reset)
 			return
