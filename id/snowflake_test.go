@@ -18,7 +18,7 @@ func TestToTest(t *testing.T) {
 		t.Log(id)
 	}*/
 
-	/*strId := SId.ToString(1497024880686665728)
-	t.Log(strId)*/
-	SId.Test()
+	strId := SId.ToString(1503985520630304770)
+	t.Log(strId)
+	//SId.Test()
 }

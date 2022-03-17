@@ -2,6 +2,7 @@ package ws
 
 import (
 	"basic/color"
+	"basic/id"
 	"basic/ip"
 	"basic/token"
 	"bytes"
@@ -19,9 +20,10 @@ import (
 var WS *server
 
 type (
-	OnClose   func(id int64)
+	OnStart   func() error
+	OnClose   func(id string)
 	OnMessage func(data []byte)
-	OnConn    func(uid int64, data string) error
+	OnConn    func(uid, data string) error
 
 	Server struct {
 		Addr            string    //监听地址
@@ -29,6 +31,7 @@ type (
 		WriteBufferSize int       //最大head息长度
 		Origin          bool      //是否是用于web，跨域
 		UserAgent       string    //允许的UserAgent
+		OnStart         OnStart   //启动时
 		OnClose         OnClose   //当关闭一个链接时
 		OnMessage       OnMessage //当收到消息
 		OnConn          OnConn    //当链接时，data的内容是链接参数的d参数
@@ -36,17 +39,19 @@ type (
 	}
 
 	server struct {
-		SendMessage func(id int64, data []byte) error
+		SendMessage func(id string, data []byte) error
 	}
 
 	client struct {
-		userId  int64
+		userId  string
 		conn    *websocket.Conn
 		message chan []byte
 	}
 )
 
-var clients map[int64]*client
+var clients map[string]*client
+
+//var onStart OnStart
 var onClose OnClose
 var onMessage OnMessage
 
@@ -55,13 +60,18 @@ const (
 	writeWait = 10 * time.Second
 
 	// Time allowed to read the next pong message from the peer.
-	pongWait = 10 * time.Second
+	pongWait = 30 * time.Second
 
 	// Send pings to peer with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
 )
 
 func (s Server) Run() {
+	err := s.OnStart()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	//当不配置的时候，使用以下默认配置
 	if s.Addr == "" {
@@ -88,7 +98,7 @@ func (s Server) Run() {
 	onClose = s.OnClose
 	onMessage = s.OnMessage
 
-	clients = make(map[int64]*client)
+	clients = make(map[string]*client)
 
 	//s:签名
 	//t:token
@@ -111,7 +121,8 @@ func (s Server) Run() {
 		sec := ""
 		if value, ok := m["sec"]; ok {
 			sec = value
-			i64, err := strconv.ParseInt(value, 10, 64)
+			var i64 int64
+			i64, err = strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				log.Println(err)
 				return
@@ -153,11 +164,11 @@ func (s Server) Run() {
 
 		//提取token信息
 		tk := token.Token{}
-		if err := tk.Decode(token_); err != nil {
+		if err = tk.Decode(token_); err != nil {
 			log.Println("decode token err:", err)
 			return
 		}
-		userId := tk.Id
+		userId := id.SId.ToString(tk.Id)
 
 		//检查签名
 		var buffer bytes.Buffer
@@ -177,7 +188,8 @@ func (s Server) Run() {
 		}
 
 		//创建新的链接
-		conn, err := upgrader.Upgrade(w, r, nil)
+		var conn *websocket.Conn
+		conn, err = upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Println(err)
 			return
@@ -187,7 +199,7 @@ func (s Server) Run() {
 			return
 		}
 		conn.SetPongHandler(func(string) error {
-			log.Println("pong handler")
+			//log.Println("pong handler")
 			return conn.SetReadDeadline(time.Now().Add(pongWait))
 		})
 
@@ -214,10 +226,9 @@ func (s Server) Run() {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", sh)
-	//http.HandleFunc("/", sh)
 
 	go func() {
-		err := http.ListenAndServe(s.Addr, mux)
+		err = http.ListenAndServe(s.Addr, mux)
 		if err != nil {
 			log.Println("[ws] Listen error!", err)
 			return
@@ -226,11 +237,11 @@ func (s Server) Run() {
 
 	//ws操作句柄
 	WS = new(server)
-	WS.SendMessage = func(id int64, data []byte) (err error) {
+	WS.SendMessage = func(id string, data []byte) (err error) {
 		if c, ok := clients[id]; ok {
 			err = c.send(data)
 		} else {
-			err = fmt.Errorf("%d offline", id)
+			err = fmt.Errorf("%s offline", id)
 		}
 		return
 	}
@@ -302,7 +313,7 @@ func (c *client) pump() {
 					close(done)
 					return
 				}
-				log.Println("ping message")
+				//log.Println("ping message")
 			case <-done:
 				return
 			}
@@ -323,7 +334,7 @@ func (c *client) close() {
 	if _, ok := clients[c.userId]; ok {
 		delete(clients, c.userId)
 	}
-	log.Println("close conn")
+	//log.Println("close conn")
 }
 
 func (c *client) send(data []byte) (err error) {

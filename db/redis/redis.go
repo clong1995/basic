@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"log"
+	"time"
 )
 
 //https://studygolang.com/articles/32352
 //https://www.tizi365.com/archives/290.html
+//https://segmentfault.com/a/1190000021538684
 
 type (
 	Server struct {
@@ -18,6 +20,7 @@ type (
 		Password string
 		DB       int
 		Flush    bool
+		Block    bool
 	}
 	server struct {
 	}
@@ -29,13 +32,14 @@ var (
 	ctx         = context.Background()
 )
 
-func (s server) SetStruct(key, field string, value interface{}) (err error) {
-	jsonBytes, err := json.Marshal(value)
-	if err != nil {
-		log.Println(err)
-		return
+//
+
+func (s server) Set(key string, value interface{}, expiration ...time.Duration) (err error) {
+	exp := time.Duration(0)
+	if len(expiration) == 1 {
+		exp = expiration[0]
 	}
-	err = redisClient.HSet(ctx, key, field, string(jsonBytes)).Err()
+	err = redisClient.Set(ctx, key, value, exp).Err()
 	if err != nil {
 		log.Println(err)
 		return
@@ -43,7 +47,53 @@ func (s server) SetStruct(key, field string, value interface{}) (err error) {
 	return
 }
 
-func (s server) GetStruct(key, field string, v interface{}) (err error) {
+func (s server) Get(key string) (bytes []byte, err error) {
+	return redisClient.Get(ctx, key).Bytes()
+}
+
+func (s server) Exists(key string) (exists bool, err error) {
+	i64, err := redisClient.Exists(ctx, key).Result()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	return 1 == i64, nil
+}
+
+func (s server) Del(keys ...string) (count int64, err error) {
+	count, err = redisClient.Del(ctx, keys...).Result()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	return
+}
+
+//Struct
+
+func (s server) HSetStruct(key, field string, value interface{}, expiration ...time.Duration) (err error) {
+	jsonBytes, err := json.Marshal(value)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	//过期时间
+	if len(expiration) == 1 {
+		exp := expiration[0]
+		err = redisClient.Expire(ctx, key, exp).Err()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
+	if err = redisClient.HSet(ctx, key, field, jsonBytes).Err(); err != nil {
+		log.Println(err)
+		return
+	}
+	return
+}
+
+func (s server) HGetStruct(key, field string, v interface{}) (err error) {
 	bytes, err := redisClient.HGet(ctx, key, field).Bytes()
 	if err != nil {
 		log.Println(err)
@@ -57,12 +107,8 @@ func (s server) GetStruct(key, field string, v interface{}) (err error) {
 	return
 }
 
-func (s server) ExistsStruct(key, field string) (exists bool, err error) {
+func (s server) HExists(key, field string) (exists bool, err error) {
 	exists, err = redisClient.HExists(ctx, key, field).Result()
-	if err != nil {
-		log.Println(err)
-		return
-	}
 	if err != nil {
 		log.Println(err)
 		return
@@ -70,8 +116,8 @@ func (s server) ExistsStruct(key, field string) (exists bool, err error) {
 	return
 }
 
-func (s server) Del(key string, keys ...string) (count int64, err error) {
-	count, err = redisClient.HDel(ctx, key, keys...).Result()
+func (s server) HDel(key string, fields ...string) (count int64, err error) {
+	count, err = redisClient.HDel(ctx, key, fields...).Result()
 	if err != nil {
 		log.Println(err)
 		return
@@ -83,6 +129,11 @@ func (s Server) Run() {
 	if Redis != nil {
 		return
 	}
+
+	if s.Addr == "" {
+		s.Addr = ":6379"
+	}
+
 	//创建客户端
 	redisClient = redis.NewClient(&redis.Options{
 		Addr:     s.Addr,
@@ -98,4 +149,8 @@ func (s Server) Run() {
 	}
 	Redis = new(server)
 	color.Success(fmt.Sprintf("[redis] connect %s db %d success", s.Addr, s.DB))
+
+	if s.Block {
+		select {}
+	}
 }
