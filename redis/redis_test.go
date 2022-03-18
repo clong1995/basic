@@ -17,12 +17,26 @@ func Test_server_Set(t *testing.T) {
 
 func Test_server_Get(t *testing.T) {
 	Server{
-		Addr:     "",
+		Addr:     "127.0.0.1:6379",
 		Password: "",
 		DB:       0,
 	}.Run()
 
 	bytes, err := Redis.Get("test")
+	if err != nil {
+		t.Log(err)
+		return
+	}
+	t.Log(bytes)
+}
+func Test_server_HGet(t *testing.T) {
+	Server{
+		Addr:     "127.0.0.1:6379",
+		Password: "",
+		DB:       0,
+	}.Run()
+
+	bytes, err := Redis.HGet("test", "xxx")
 	if err != nil {
 		t.Log(err)
 		return

@@ -1,13 +1,11 @@
 package ws
 
 import (
+	"basic/cipher"
 	"basic/color"
 	"basic/id"
 	"basic/ip"
 	"basic/token"
-	"bytes"
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
@@ -171,11 +169,7 @@ func (s Server) Run() {
 		userId := id.SId.ToString(tk.Id)
 
 		//检查签名
-		var buffer bytes.Buffer
-		buffer.Write([]byte(sec + token_ + data))
-		buffer.Write([]byte(tk.AccessKeyID()))
-		sum := md5.Sum(buffer.Bytes())
-		if signature != hex.EncodeToString(sum[:]) {
+		if cipher.CheckSign(signature, []byte(sec+token_+data), []byte(tk.AccessKeyID())) {
 			log.Println("signature err")
 			return
 		}

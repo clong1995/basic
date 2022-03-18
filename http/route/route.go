@@ -39,6 +39,10 @@ func (r routeMap) put(route Route) {
 		// 默认token认证
 		route.Pattern.Auth = Enable
 	}
+	if route.Pattern.Cache == None { // 缓存
+		// 默认不缓存
+		route.Pattern.Cache = CacheDisable
+	}
 	if route.Pattern.Encrypt == None { // 高级加密
 		// 默认不使用高级加密
 		route.Pattern.Encrypt = EncryptDisable
@@ -48,7 +52,7 @@ func (r routeMap) put(route Route) {
 		route.Pattern.UserAgent = Enable
 	}
 	if route.Pattern.General == None { // 通用模式
-		//默认不使用通用模式
+		// 默认不使用通用模式
 		route.Pattern.General = GeneralDisable
 	}
 	r[route.Url] = route

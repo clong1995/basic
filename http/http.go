@@ -1,14 +1,14 @@
 package http
 
 import (
+	"basic/cipher"
 	"basic/color"
 	. "basic/http/route"
 	"basic/id"
 	"basic/ip"
+	"basic/redis"
 	"basic/token"
 	"bytes"
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/time/rate"
@@ -21,16 +21,22 @@ import (
 
 //返回数据格式
 /*
-type original struct {
-	Data      string `json:"d"`
-	Signature string `json:"s"`
+head:{
+	"content-sign":"signature",
+}
+body:{
+	"state":"OK",
+	"data":{
+		"aaa":"bbb",
+		"ccc":"ddd"
+	}
 }
 */
 
 //收到数据格式
 /*
 head:{
-	"Content-Hmac":"signature",
+	"content-sign":"signature",
 }
 body: {
 	"t":"token",
@@ -41,7 +47,7 @@ body: {
 */
 
 const (
-	contentSign     = "Content-Sign"   //指纹
+	contentSign     = "content-sign"   //指纹
 	maxRequestCount = 1200             //存活周期内的最大请求数 1200
 	dumpPeriod      = 10 * time.Minute //清理周期 10
 	maxAliveTime    = 10 * time.Minute //存活周期 10
@@ -125,16 +131,38 @@ func (i *iPRateLimiter) dump() {
 	}()
 }
 
-func sign(message, ak []byte) string {
-	var buffer bytes.Buffer
-	buffer.Write(message)
-	buffer.Write(ak)
-	sum := md5.Sum(buffer.Bytes())
-	return hex.EncodeToString(sum[:])
+func cache(userAuth *auth, pattern string, param, result []byte) {
+	//去掉param的d和t
+	if redis.Redis != nil {
+		//去掉auth
+		param = bytes.Replace(param, []byte(userAuth.Token), []byte{}, 1)
+		param = bytes.Replace(param, []byte(userAuth.DeviceId), []byte{}, 1)
+		if err := redis.Redis.HSet(pattern, string(param), result); err != nil {
+			log.Println(err)
+			return
+		}
+		//log.Println("cached")
+	} else {
+		log.Println("redis not run")
+	}
 }
 
-func checkSign(signature string, message, ak []byte) bool {
-	return signature == sign(message, ak)
+func getCache(userAuth *auth, pattern string, param []byte) (result []byte, err error) {
+	if redis.Redis != nil {
+		//去掉auth
+		param = bytes.Replace(param, []byte(userAuth.Token), []byte{}, 1)
+		param = bytes.Replace(param, []byte(userAuth.DeviceId), []byte{}, 1)
+		result, err = redis.Redis.HGet(pattern, string(param))
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		//log.Println("hit cache")
+	} else {
+		err = fmt.Errorf("redis not run")
+		log.Println(err)
+	}
+	return
 }
 
 // Run 启动服务
@@ -251,16 +279,7 @@ func (h Server) Run() {
 					}
 				}
 
-				//paramByte期待的数据结构是
-				//head:{
-				//	"Content-Hmac":"signature",
-				//}
-				//body: {
-				//	"t":"token",
-				//	"d":"deviceId",
-				//	"aaa":"bbb",
-				//	"ccc":"ddd"
-				//}
+				//请求数据
 				var paramByte []byte
 				var err error
 				//根据方法不同处理参数
@@ -291,11 +310,14 @@ func (h Server) Run() {
 
 				var tId int64
 				var ak []byte
+
+				userAuth := &auth{}
+
 				if route.Pattern.Auth == Enable { //启用认证
 					if len(paramByte) > 0 {
 						//提取 token、deviceId
-						a := &auth{}
-						err = json.Unmarshal(paramByte, a)
+						//a := &auth{}
+						err = json.Unmarshal(paramByte, userAuth)
 						if err != nil {
 							errStr := fmt.Sprintf("%s : %s", pattern, err)
 							fmt.Println(errStr)
@@ -303,7 +325,7 @@ func (h Server) Run() {
 							return
 						}
 
-						if a.Token == "" {
+						if userAuth.Token == "" {
 							errStr := fmt.Sprintf("%s : %s", pattern, "缺少令牌")
 							fmt.Println(errStr)
 							http.Error(w, errStr, http.StatusNotAcceptable)
@@ -312,7 +334,7 @@ func (h Server) Run() {
 
 						//提起令牌内容
 						tk := token.Token{}
-						err = tk.Decode(a.Token)
+						err = tk.Decode(userAuth.Token)
 						if err != nil {
 							errStr := fmt.Sprintf("%s : %s", pattern, "令牌错误")
 							fmt.Println(errStr)
@@ -324,7 +346,7 @@ func (h Server) Run() {
 						ak = []byte(tk.AccessKeyID())
 
 						//校验签名
-						if !checkSign(sig, paramByte, ak) {
+						if !cipher.CheckSign(sig, paramByte, ak) {
 							errStr := fmt.Sprintf("%s : %s", pattern, "指纹检验失败")
 							fmt.Println(errStr)
 							http.Error(w, errStr, http.StatusNotAcceptable)
@@ -340,6 +362,45 @@ func (h Server) Run() {
 
 				//var jsonErr error
 
+				// 查找缓存，缓存一定是正确的结果
+				if route.Pattern.Cache == Enable {
+					//var bytes []byte
+					result, cacheErr := getCache(userAuth, pattern, paramByte)
+					//没找到
+					if cacheErr != nil {
+						//缓存穿透
+						log.Println(fmt.Sprintf("%s : %s", pattern, "Cache Penetration"))
+						log.Println(cacheErr)
+					} else {
+						//找到了
+						if route.Pattern.General == Enable {
+							//通用不格式直接输出
+							//输出
+							_, err = w.Write(result)
+							if err != nil {
+								errStr := fmt.Sprintf("%s : %s", pattern, err)
+								fmt.Println(errStr)
+								return
+							}
+						} else {
+							//签名输出
+							if route.Pattern.Auth == Enable {
+								responseSig := cipher.Sign(result, ak)
+								//写入header
+								w.Header().Set(contentSign, responseSig)
+							}
+							w.WriteHeader(http.StatusOK)
+							_, err = w.Write(result)
+							if err != nil {
+								errStr := fmt.Sprintf("%s : %s", pattern, err)
+								log.Println(errStr)
+								return
+							}
+						}
+						return
+					}
+				}
+
 				//执行
 				var result interface{}
 				//检查是否有特殊的handle
@@ -350,8 +411,10 @@ func (h Server) Run() {
 					result, err = route.Handle()(id.SId.ToString(tId), paramByte)
 				}
 
-				// 通用不格式直接写出
+				// 通用不格式直接输出
 				if route.Pattern.General == Enable {
+
+					//这里的错误是不格式化的错误
 					if err != nil {
 						errStr := fmt.Sprintf("%s : %s", pattern, err)
 						fmt.Println(errStr)
@@ -377,17 +440,14 @@ func (h Server) Run() {
 						w.Header().Set("Content-Type", route.ContentType)
 					}
 					w.WriteHeader(http.StatusOK)
-					_, err = w.Write(result.([]byte))
 
-					/*var buf bytes.Buffer
-					enc := gob.NewEncoder(&buf)
-					err = enc.Encode(result)
-					if err != nil {
-						log.Printf("%s : %s", pattern, err)
-						w.WriteHeader(http.StatusInternalServerError)
-						return
+					//缓存
+					res := result.([]byte)
+					if route.Pattern.Cache == Enable {
+						cache(userAuth, pattern, paramByte, res)
 					}
-					_, err = w.Write(buf.Bytes())*/
+					//输出
+					_, err = w.Write(res)
 
 					if err != nil {
 						errStr := fmt.Sprintf("%s : %s", pattern, err)
@@ -399,6 +459,8 @@ func (h Server) Run() {
 
 				// 处理结果
 				var jsonBytes []byte
+
+				// 这里的错误是经过格式化的错误
 				if err != nil {
 					errStr := fmt.Sprintf("%s : %s", pattern, err)
 					fmt.Println(errStr)
@@ -411,13 +473,18 @@ func (h Server) Run() {
 						"OK",
 						result,
 					})
+
+					//缓存
+					if route.Pattern.Cache == Enable {
+						cache(userAuth, pattern, paramByte, jsonBytes)
+					}
 				}
 
 				//json错误
 				if err != nil {
 					errStr := fmt.Sprintf("%s : %s", pattern, err)
-					http.Error(w, errStr, http.StatusInternalServerError)
 					fmt.Println(errStr)
+					http.Error(w, errStr, http.StatusInternalServerError)
 					return
 				}
 
@@ -425,14 +492,11 @@ func (h Server) Run() {
 
 				//计算hmac
 				if route.Pattern.Auth == Enable {
-					responseSig := sign(jsonBytes, ak)
+					responseSig := cipher.Sign(jsonBytes, ak)
 					//写入header
 					w.Header().Set(contentSign, responseSig)
 				}
-
-				//JSON
 				w.WriteHeader(http.StatusOK)
-
 				//写出结果
 				_, err = w.Write(jsonBytes)
 				if err != nil {
@@ -440,11 +504,6 @@ func (h Server) Run() {
 					log.Println(errStr)
 					return
 				}
-
-				//写入缓存
-				/*if route.Pattern.Cache != None {
-
-				}*/
 			})
 		}(s, r)
 	}

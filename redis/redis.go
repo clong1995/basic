@@ -69,14 +69,16 @@ func (s server) Del(keys ...string) (count int64, err error) {
 	return
 }
 
-//Struct
-
 func (s server) HSetStruct(key, field string, value interface{}, expiration ...time.Duration) (err error) {
 	jsonBytes, err := json.Marshal(value)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	return s.HSet(key, field, jsonBytes, expiration...)
+}
+
+func (s server) HSet(key, field string, value interface{}, expiration ...time.Duration) (err error) {
 	//过期时间
 	if len(expiration) == 1 {
 		exp := expiration[0]
@@ -86,7 +88,7 @@ func (s server) HSetStruct(key, field string, value interface{}, expiration ...t
 			return
 		}
 	}
-	if err = redisClient.HSet(ctx, key, field, jsonBytes).Err(); err != nil {
+	if err = redisClient.HSet(ctx, key, field, value).Err(); err != nil {
 		log.Println(err)
 		return
 	}
@@ -94,13 +96,21 @@ func (s server) HSetStruct(key, field string, value interface{}, expiration ...t
 }
 
 func (s server) HGetStruct(key, field string, v interface{}) (err error) {
-	bytes, err := redisClient.HGet(ctx, key, field).Bytes()
+	bytes, err := s.HGet(key, field)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	err = json.Unmarshal(bytes, v)
 	if err != nil {
+		log.Println(err)
+		return
+	}
+	return
+}
+
+func (s server) HGet(key, field string) (bytes []byte, err error) {
+	if bytes, err = redisClient.HGet(ctx, key, field).Bytes(); err != nil {
 		log.Println(err)
 		return
 	}

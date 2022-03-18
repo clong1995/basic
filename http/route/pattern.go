@@ -2,13 +2,14 @@
 package route
 
 type (
-	Pattern struct {
+	PatternType int
+	Pattern     struct {
 		Auth      PatternType //认证
+		Cache     PatternType //缓存
 		Encrypt   PatternType //加密
 		UserAgent PatternType //user-agent
 		General   PatternType //通用模式
 	}
-	PatternType int
 )
 
 const (
@@ -17,6 +18,8 @@ const (
 	Enable
 	// AuthDisable 认证
 	AuthDisable
+	// CacheDisable 缓存
+	CacheDisable
 	// EncryptDisable 加密
 	EncryptDisable
 	// UserAgentDisable User-Agent
@@ -29,6 +32,10 @@ func (p PatternType) String() string {
 	switch p {
 	case None:
 		return "None"
+
+	//认证
+	case CacheDisable:
+		return "关闭缓存"
 
 	//认证
 	case AuthDisable:
