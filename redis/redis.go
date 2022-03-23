@@ -14,6 +14,9 @@ import (
 //https://www.tizi365.com/archives/290.html
 //https://segmentfault.com/a/1190000021538684
 
+//https://blog.csdn.net/ghosind/article/details/107327922
+//https://pkg.go.dev/github.com/go-redis/redis/v8#section-readme
+
 type (
 	Server struct {
 		Addr     string
@@ -29,17 +32,21 @@ type (
 var (
 	Redis       *server
 	redisClient *redis.Client
-	ctx         = context.Background()
+	//ctx         = context.Background()
 )
 
-//
+//常用函数的封装
+
+func (s server) Get(key string) (bytes []byte, err error) {
+	return redisClient.Get(context.Background(), key).Bytes()
+}
 
 func (s server) Set(key string, value interface{}, expiration ...time.Duration) (err error) {
 	exp := time.Duration(0)
 	if len(expiration) == 1 {
 		exp = expiration[0]
 	}
-	err = redisClient.Set(ctx, key, value, exp).Err()
+	err = redisClient.Set(context.Background(), key, value, exp).Err()
 	if err != nil {
 		log.Println(err)
 		return
@@ -47,12 +54,31 @@ func (s server) Set(key string, value interface{}, expiration ...time.Duration) 
 	return
 }
 
-func (s server) Get(key string) (bytes []byte, err error) {
-	return redisClient.Get(ctx, key).Bytes()
+func (s server) HGet(key, field string) (bytes []byte, err error) {
+	if bytes, err = redisClient.HGet(context.Background(), key, field).Bytes(); err != nil {
+		log.Println(err)
+		return
+	}
+	return
+}
+
+func (s server) HSet(key, field string, value interface{}, expiration ...time.Duration) (err error) {
+	//过期时间
+	if len(expiration) == 1 {
+		exp := expiration[0]
+		err = redisClient.Expire(context.Background(), key, exp).Err()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
+
+	//查看这个的文档要改
+	return redisClient.HSet(context.Background(), key, field, value).Err()
 }
 
 func (s server) Exists(key string) (exists bool, err error) {
-	i64, err := redisClient.Exists(ctx, key).Result()
+	i64, err := redisClient.Exists(context.Background(), key).Result()
 	if err != nil {
 		log.Println(err)
 		return
@@ -61,12 +87,15 @@ func (s server) Exists(key string) (exists bool, err error) {
 }
 
 func (s server) Del(keys ...string) (count int64, err error) {
-	count, err = redisClient.Del(ctx, keys...).Result()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	return
+	return redisClient.Del(context.Background(), keys...).Result()
+}
+
+func (s server) HExists(key, field string) (exists bool, err error) {
+	return redisClient.HExists(context.Background(), key, field).Result()
+}
+
+func (s server) HDel(key string, fields ...string) (count int64, err error) {
+	return redisClient.HDel(context.Background(), key, fields...).Result()
 }
 
 func (s server) HSetStruct(key, field string, value interface{}, expiration ...time.Duration) (err error) {
@@ -76,23 +105,6 @@ func (s server) HSetStruct(key, field string, value interface{}, expiration ...t
 		return
 	}
 	return s.HSet(key, field, jsonBytes, expiration...)
-}
-
-func (s server) HSet(key, field string, value interface{}, expiration ...time.Duration) (err error) {
-	//过期时间
-	if len(expiration) == 1 {
-		exp := expiration[0]
-		err = redisClient.Expire(ctx, key, exp).Err()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	}
-	if err = redisClient.HSet(ctx, key, field, value).Err(); err != nil {
-		log.Println(err)
-		return
-	}
-	return
 }
 
 func (s server) HGetStruct(key, field string, v interface{}) (err error) {
@@ -109,30 +121,36 @@ func (s server) HGetStruct(key, field string, v interface{}) (err error) {
 	return
 }
 
-func (s server) HGet(key, field string) (bytes []byte, err error) {
-	if bytes, err = redisClient.HGet(ctx, key, field).Bytes(); err != nil {
-		log.Println(err)
-		return
+//删除过度封装
+/*
+
+
+
+
+
+func (s server) HMSet(key string, fields map[string]interface{}, expiration ...time.Duration) (err error) {
+	//过期时间
+	if len(expiration) == 1 {
+		exp := expiration[0]
+		err = redisClient.Expire(ctx, key, exp).Err()
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
-	return
+
+	return redisClient.HMSet(ctx, key, fields).Err()
 }
 
-func (s server) HExists(key, field string) (exists bool, err error) {
-	exists, err = redisClient.HExists(ctx, key, field).Result()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	return
+func (s server) HMGet(key string, fields ...string) (result []interface{}, err error) {
+	return redisClient.HMGet(ctx, key, fields...).Result()
 }
 
-func (s server) HDel(key string, fields ...string) (count int64, err error) {
-	count, err = redisClient.HDel(ctx, key, fields...).Result()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	return
+*/
+
+// Client redis有丰富的api封装用起来不灵活，这里仅封装一些操作复杂的，简单的直接使用原生api
+func (s server) Client() *redis.Client {
+	return redisClient
 }
 
 func (s Server) Run() {
@@ -152,7 +170,7 @@ func (s Server) Run() {
 	})
 	//清空所有数据
 	if s.Flush {
-		_, err := redisClient.FlushDB(ctx).Result()
+		_, err := redisClient.FlushDB(context.Background()).Result()
 		if err != nil {
 			log.Fatal(color.Red, err, color.Reset)
 		}
