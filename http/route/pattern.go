@@ -4,11 +4,12 @@ package route
 type (
 	PatternType int
 	Pattern     struct {
-		Auth      PatternType //认证
-		Cache     PatternType //缓存
-		Encrypt   PatternType //加密
-		UserAgent PatternType //user-agent
-		General   PatternType //通用模式
+		Auth        PatternType //认证
+		Cache       PatternType //缓存
+		CacheExpire int         //缓存保留时间单位秒，当Cache开启的时候有效
+		Encrypt     PatternType //加密
+		UserAgent   PatternType //user-agent
+		General     PatternType //通用模式
 	}
 )
 

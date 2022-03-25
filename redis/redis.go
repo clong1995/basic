@@ -16,6 +16,8 @@ import (
 
 //https://blog.csdn.net/ghosind/article/details/107327922
 //https://pkg.go.dev/github.com/go-redis/redis/v8#section-readme
+//https://pkg.go.dev/github.com/go-redis/redis#Client.Watch
+//https://pkg.go.dev/github.com/go-redis/redis/v8
 
 type (
 	Server struct {

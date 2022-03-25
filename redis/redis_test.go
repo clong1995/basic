@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
+	"sync"
 	"testing"
 )
 
@@ -43,6 +44,108 @@ func Test_server_ZRangeByScore(t *testing.T) {
 	}
 }
 
+//https://geektutu.com/post/hpg-concurrency-control.html控制并发量
+//多线程并发修改
+func Test_server_WatchMutil(t *testing.T) {
+	Server{
+		Addr:     "127.0.0.1:6379",
+		Password: "",
+		DB:       0,
+	}.Run()
+	//初始化key
+	key := "mutil"
+	err := Redis.Set(key, 0)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	//多协程
+	const routineCount = 5
+	// 干活干
+	/*worker := func() {
+		defer wg.Done()
+
+		// 干活干活干活
+		var value []byte
+		var cacheErr error
+
+		value, cacheErr = Redis.Get(key)
+		if cacheErr != nil {
+			t.Error(cacheErr)
+			return
+		}
+		var i64 int64
+		i64, cacheErr = strconv.ParseInt(string(value), 10, 64)
+		if cacheErr != nil {
+			t.Error(cacheErr)
+			return
+		}
+		i64 += 1
+		cacheErr = Redis.Set(key, i64)
+		if cacheErr != nil {
+			t.Error(cacheErr)
+			return
+		}
+	}*/
+
+	// 累加
+	increment := func(key string) (err error) {
+		txf := func(tx *redis.Tx) (err error) {
+			ctx := context.Background()
+			//读取
+			value, err := tx.Get(ctx, key).Int64()
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			//修改值
+			value++
+
+			// runs only if the watched keys remain unchanged
+			_, err = tx.Pipelined(ctx, func(pipe redis.Pipeliner) (err error) {
+				//插入
+				t.Log(value)
+				err = pipe.Set(ctx, key, value, 0).Err()
+				if err != nil {
+					t.Error(err)
+				}
+				return
+			})
+
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			return
+		}
+
+		err = Redis.Client().Watch(context.Background(), txf, key)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		//TODO retries
+
+		return
+	}
+
+	//并发修改
+	wg := sync.WaitGroup{}
+	wg.Add(routineCount)
+	for i := 0; i < routineCount; i++ {
+		//睡一会的结果，的确累加了，不睡补发得到正确累加
+		//time.Sleep(1 * time.Second)
+		go func() {
+			defer wg.Done()
+			if incrErr := increment(key); incrErr != nil {
+				t.Error(incrErr)
+			}
+		}()
+	}
+	wg.Wait()
+}
 func Test_server_Set(t *testing.T) {
 	Server{
 		Addr:     "",
