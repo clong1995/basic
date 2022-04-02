@@ -169,7 +169,7 @@ func (s Server) Run() {
 		userId := id.SId.ToString(tk.Id)
 
 		//检查签名
-		if cipher.CheckSign(signature, []byte(sec+token_+data), []byte(tk.AccessKeyID())) {
+		if !cipher.CheckSign(signature, []byte(sec+token_+data), []byte(tk.AccessKeyID())) {
 			log.Println("signature err")
 			return
 		}
