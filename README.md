@@ -1,4 +1,6 @@
-# basic
+# basic 开发常用工具
+##安装
+`go get github.com/clong1995/basic`
 ##特点
 1. 【http】路由，请求参数定义，请求参数校验，json参数转结构体，限流，数据签名，加密，令牌。
 2. 【mysql】连接，数据的字段映射，事务管理。
