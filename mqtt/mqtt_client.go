@@ -1,8 +1,8 @@
 package mqtt
 
 import (
-	"basic/color"
 	"fmt"
+	"github.com/clong1995/basic/color"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"log"
 )

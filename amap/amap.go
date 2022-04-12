@@ -1,11 +1,11 @@
 package amap
 
 import (
-	"basic/amap/direction"
-	"basic/amap/geocode"
-	regeo2 "basic/amap/regeo"
-	"basic/amap/search"
-	"basic/color"
+	"github.com/clong1995/basic/amap/direction"
+	"github.com/clong1995/basic/amap/geocode"
+	regeo2 "github.com/clong1995/basic/amap/regeo"
+	"github.com/clong1995/basic/amap/search"
+	"github.com/clong1995/basic/color"
 )
 
 //正规表示发:lat,lon或者[lon,lat]

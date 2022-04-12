@@ -1,12 +1,12 @@
 package ws
 
 import (
-	"basic/cipher"
-	"basic/color"
-	"basic/id"
-	"basic/ip"
-	"basic/token"
 	"fmt"
+	"github.com/clong1995/basic/cipher"
+	"github.com/clong1995/basic/color"
+	"github.com/clong1995/basic/id"
+	"github.com/clong1995/basic/ip"
+	"github.com/clong1995/basic/token"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"

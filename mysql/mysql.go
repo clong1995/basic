@@ -1,9 +1,9 @@
 package mysql
 
 import (
-	"basic/color"
 	"database/sql"
 	"fmt"
+	"github.com/clong1995/basic/color"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"reflect"

@@ -1,8 +1,8 @@
 package dysms
 
 import (
-	"basic/color"
-	"basic/random"
+	"github.com/clong1995/basic/color"
+	"github.com/clong1995/basic/random"
 
 	//"basic/random"
 	"fmt"

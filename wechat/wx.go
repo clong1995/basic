@@ -1,10 +1,6 @@
 package wechat
 
 import (
-	"basic/color"
-	"basic/id"
-	"basic/random"
-	"basic/request"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
@@ -13,6 +9,10 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/clong1995/basic/color"
+	"github.com/clong1995/basic/id"
+	"github.com/clong1995/basic/random"
+	"github.com/clong1995/basic/request"
 	"log"
 	"net/http"
 	"strconv"

@@ -1,13 +1,13 @@
 package jverify
 
 import (
-	"basic/cipher"
-	"basic/color"
-	"basic/request"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/clong1995/basic/cipher"
+	"github.com/clong1995/basic/color"
+	"github.com/clong1995/basic/request"
 	"log"
 )
 

@@ -1,8 +1,8 @@
 package mysql
 
 import (
-	"basic/id"
 	"fmt"
+	"github.com/clong1995/basic/id"
 	"log"
 	"strconv"
 	"strings"

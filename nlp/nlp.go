@@ -2,11 +2,11 @@
 package nlp
 
 import (
-	"basic/color"
 	"encoding/json"
 	"fmt"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
+	"github.com/clong1995/basic/color"
 	"log"
 	"regexp"
 	"strings"

@@ -2,9 +2,9 @@
 package id
 
 import (
-	"basic/color"
 	"fmt"
 	"github.com/bwmarrin/snowflake"
+	"github.com/clong1995/basic/color"
 	"log"
 	"time"
 )

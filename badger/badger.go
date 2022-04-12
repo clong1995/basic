@@ -1,8 +1,8 @@
 package badger
 
 import (
-	"basic/color"
 	"fmt"
+	"github.com/clong1995/basic/color"
 	badgerDB "github.com/dgraph-io/badger/v3"
 	"log"
 )

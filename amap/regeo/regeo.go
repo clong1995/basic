@@ -1,9 +1,9 @@
 package regeo
 
 import (
-	"basic/request"
 	"encoding/json"
 	"errors"
+	"github.com/clong1995/basic/request"
 	"log"
 )
 

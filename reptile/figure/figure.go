@@ -2,10 +2,10 @@
 package figure
 
 import (
-	"basic/oss"
-	"basic/reptile/page"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/clong1995/basic/oss"
+	"github.com/clong1995/basic/reptile/page"
 	"log"
 	"strings"
 )

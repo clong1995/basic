@@ -10,6 +10,7 @@ type (
 		Encrypt     PatternType //加密
 		UserAgent   PatternType //user-agent
 		General     PatternType //通用模式
+		Version     int         //内部版本
 	}
 )
 

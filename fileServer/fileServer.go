@@ -1,9 +1,9 @@
 package fileServer
 
 import (
-	"basic/color"
-	"basic/ip"
 	"fmt"
+	"github.com/clong1995/basic/color"
+	"github.com/clong1995/basic/ip"
 	"io/ioutil"
 	"log"
 	"net/http"

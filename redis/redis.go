@@ -1,10 +1,10 @@
 package redis
 
 import (
-	"basic/color"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/clong1995/basic/color"
 	"github.com/go-redis/redis/v8"
 	"log"
 	"time"

@@ -1,10 +1,10 @@
 package direction
 
 import (
-	"basic/request"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/clong1995/basic/request"
 	"log"
 	"strings"
 )

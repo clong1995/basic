@@ -3,13 +3,13 @@
 package mqtt
 
 import (
-	"basic/cipher"
-	"basic/color"
 	"encoding/base64"
 	"fmt"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/client"
 	onsmqtt20200420 "github.com/alibabacloud-go/onsmqtt-20200420/client"
 	"github.com/alibabacloud-go/tea/tea"
+	"github.com/clong1995/basic/cipher"
+	"github.com/clong1995/basic/color"
 	"log"
 	"strings"
 	"time"

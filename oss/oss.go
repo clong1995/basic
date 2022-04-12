@@ -2,7 +2,6 @@
 package oss
 
 import (
-	"basic/color"
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha1"
@@ -10,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/clong1995/basic/color"
 	"io"
 	"log"
 	"net/http"

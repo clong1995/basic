@@ -1,11 +1,11 @@
 package logistic
 
 import (
-	"basic/color"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/clong1995/basic/color"
 	"io"
 	"io/ioutil"
 	"log"

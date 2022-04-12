@@ -1,16 +1,16 @@
 package http
 
 import (
-	"basic/cipher"
-	"basic/color"
-	. "basic/http/route"
-	"basic/id"
-	"basic/ip"
-	"basic/redis"
-	"basic/token"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/clong1995/basic/cipher"
+	"github.com/clong1995/basic/color"
+	. "github.com/clong1995/basic/http/route"
+	"github.com/clong1995/basic/id"
+	"github.com/clong1995/basic/ip"
+	"github.com/clong1995/basic/redis"
+	"github.com/clong1995/basic/token"
 	"golang.org/x/time/rate"
 	"io/ioutil"
 	"log"
@@ -73,8 +73,9 @@ type (
 
 	//response 返回数据
 	response struct {
-		State string      `json:"state"`
-		Data  interface{} `json:"data"`
+		Version int         `json:"version"`
+		State   string      `json:"state"`
+		Data    interface{} `json:"data"`
 	}
 
 	iPItem struct {
@@ -465,11 +466,13 @@ func (h Server) Run() {
 					errStr := fmt.Sprintf("%s : %s", pattern, err)
 					fmt.Println(errStr)
 					jsonBytes, err = json.Marshal(response{
+						route.Pattern.Version,
 						err.Error(),
 						nil,
 					})
 				} else {
 					jsonBytes, err = json.Marshal(response{
+						route.Pattern.Version,
 						"OK",
 						result,
 					})

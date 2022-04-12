@@ -2,9 +2,9 @@
 package page
 
 import (
-	"basic/color"
 	"context"
 	"github.com/chromedp/chromedp"
+	"github.com/clong1995/basic/color"
 	"log"
 	"time"
 )

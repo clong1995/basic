@@ -1,8 +1,8 @@
 package task
 
 import (
-	"basic/color"
 	"fmt"
+	"github.com/clong1995/basic/color"
 	"github.com/robfig/cron"
 	"log"
 )

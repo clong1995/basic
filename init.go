@@ -1,8 +1,8 @@
 package basic
 
 import (
-	"basic/color"
 	"fmt"
+	"github.com/clong1995/basic/color"
 )
 
 func Init() {

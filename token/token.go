@@ -1,9 +1,9 @@
 package token
 
 import (
-	"basic/cipher"
 	"bytes"
 	"encoding/binary"
+	"github.com/clong1995/basic/cipher"
 )
 
 type Token struct {

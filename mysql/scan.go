@@ -1,10 +1,10 @@
 package mysql
 
 import (
-	"basic/cipher"
-	"basic/fieldCopy"
 	"database/sql"
 	"fmt"
+	"github.com/clong1995/basic/cipher"
+	"github.com/clong1995/basic/fieldCopy"
 	"log"
 	"reflect"
 	"time"

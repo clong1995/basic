@@ -1,9 +1,9 @@
 package figure
 
 import (
-	"basic/id"
-	"basic/oss"
-	"basic/reptile/page"
+	"github.com/clong1995/basic/id"
+	"github.com/clong1995/basic/oss"
+	"github.com/clong1995/basic/reptile/page"
 	"testing"
 )
 
@@ -34,7 +34,7 @@ func TestPrivateBaiduImage(t *testing.T) {
 	//爬虫
 	page.Server{}.Run()
 
-	image, err := PrivateBaiduImage("苏州风景")
+	image, err := PrivateBaiduImage("", "苏州风景")
 	if err != nil {
 		t.Errorf(err.Error())
 		return
