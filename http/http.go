@@ -523,7 +523,7 @@ func (h Server) Run() {
 	}
 
 	color.Success(fmt.Sprintf(
-		"[http] %s listening http://%s%s ,routes total:%d,ip limit:%g/s/%d",
+		"[http] %s listening http://%s%s ,routes total:%d,ip limit:%g/%ds",
 		h.UserAgent,
 		ips[0],
 		h.Addr,
