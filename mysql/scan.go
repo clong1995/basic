@@ -3,15 +3,15 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
-	"github.com/clong1995/basic/cipher"
 	"github.com/clong1995/basic/fieldCopy"
 	"log"
 	"reflect"
-	"time"
+	"regexp"
+	"strings"
 )
 
 // FieldScan 扫描一行数据
-func FieldScan(rows *sql.Rows, field interface{}) (err error) {
+/*func FieldScan(rows *sql.Rows, field interface{}) (err error) {
 	//取一行
 	cols, err := rows.Columns()
 	if err != nil {
@@ -56,6 +56,14 @@ func FieldScan(rows *sql.Rows, field interface{}) (err error) {
 		//包含要处理的field
 		if item, ok := mapValue[fieldName]; ok {
 			vfi := valueOfModule.Field(i)
+
+			log.Println(item)
+			log.Println(vfi.Kind())
+			switch item.(type) {
+			case []uint8:
+				log.Println("[]uint8")
+			}
+
 			if vfi.CanSet() && item != nil {
 				//检查模型和数据的类型是否对应
 				modelType := vfi.Kind().String()
@@ -71,6 +79,7 @@ func FieldScan(rows *sql.Rows, field interface{}) (err error) {
 						log.Println(err)
 						return
 					}
+
 					//检查是int
 					switch item.(type) {
 					case int64:
@@ -97,7 +106,7 @@ func FieldScan(rows *sql.Rows, field interface{}) (err error) {
 						vfi.SetString(fmtData)
 						break
 					default:
-						return fmt.Errorf(`table %s is dateFormat mast be datatime`, fieldName)
+						return fmt.Errorf(`table %s is dateFormat mast be datetime`, fieldName)
 					}
 					continue
 				}
@@ -230,12 +239,12 @@ func FieldScan(rows *sql.Rows, field interface{}) (err error) {
 	}
 
 	return
-}
+}*/
 
 // FieldScanList 扫描多行数据，这里需要优化扫描列表
-func FieldScanList() {
+/*func FieldScanList() {
 
-}
+}*/
 
 // RespScan 拷贝到 response
 func RespScan(rows *sql.Rows, field, resp interface{}) (err error) {
@@ -253,7 +262,7 @@ func RespScan(rows *sql.Rows, field, resp interface{}) (err error) {
 	return
 }
 
-func b2s(bs []uint8) string {
+/*func b2s(bs []uint8) string {
 	b := make([]byte, len(bs))
 	for i, v := range bs {
 		b[i] = v
@@ -263,4 +272,60 @@ func b2s(bs []uint8) string {
 
 func modelErr(name, modelType, dataType, field string, val interface{}) error {
 	return fmt.Errorf("model %s type is %s, table %s type is %s. value is %v", name, modelType, field, dataType, val)
+}*/
+
+//FieldScan 测试新的方案
+func FieldScan(rows *sql.Rows, targetStruct interface{}) (err error) {
+	t := reflect.TypeOf(targetStruct)
+	if t.Kind() != reflect.Ptr {
+		err = fmt.Errorf("not a pointer")
+		log.Println(err)
+		return
+	}
+	columns, err := rows.Columns()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var pointers []interface{}
+	jumpPtr := new(interface{})
+
+	val := reflect.ValueOf(targetStruct)
+	valElm := val.Elem()
+	typeElem := t.Elem()
+
+	//数据库字段
+	for _, column := range columns {
+		f := valElm.FieldByNameFunc(func(fieldName string) bool {
+			//尝试使用tag匹配数据字段
+			field, ok := typeElem.FieldByName(fieldName)
+			if ok {
+				tag := field.Tag.Get("field")
+				if column == tag {
+					return true
+				}
+			}
+			//尝试使用struct的小写模式匹配数据字段
+			snakeCase := toSnakeCase(fieldName)
+			return column == snakeCase
+		})
+		if !f.IsValid() {
+			//没有发现结构体中有字段，设置则空值跳过
+			pointers = append(pointers, jumpPtr)
+		} else {
+			pointers = append(pointers, f.Addr().Interface())
+		}
+	}
+	err = rows.Scan(pointers...)
+	return
+}
+
+var matchFirstCap = regexp.MustCompile(`(.)([A-Z][a-z]+)`)
+var matchAllCap = regexp.MustCompile(`([a-z\d])([A-Z])`)
+
+func toSnakeCase(str string) string {
+	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
+	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+	return strings.ToLower(snake)
 }
