@@ -106,13 +106,13 @@ func argsData(args []interface{}) (sqlArgs string, values []interface{}) {
 		if t.Kind() == reflect.Struct {
 			v := reflect.ValueOf(arg)
 			for i := 0; i < v.NumField(); i++ {
-				name := t.Field(i).Name
+				//name := t.Field(i).Name
 				/*if strings.HasSuffix(name, "Id") {//排除结尾为Id的字段
 					continue
 				}*/
-				if name == "Id" { //排除Id的字段
+				/*if name == "Id" { //排除Id的字段
 					continue
-				}
+				}*/
 				values = append(values, v.Field(i).Interface())
 			}
 		} else {
