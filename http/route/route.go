@@ -5,19 +5,23 @@ import "log"
 type (
 	// RouteMap 路由存储结构
 	routeMap map[string]Route
-	// Handle 函数签名
+	// Handle 函数签名。id,数据
 	Handle func(string, []byte) (interface{}, error)
 
-	// IpHandle 返回IP的签名
+	// IpHandle 返回IP的签名。ip,id,数据
 	IpHandle func(string, string, []byte) (interface{}, error)
+
+	// SessionHandle 返回session的签名。session,数据
+	SessionHandle func(string, []byte) (interface{}, error)
 
 	// Route 一个路由的结构
 	Route struct {
-		Url         string
-		ContentType string
-		Pattern     Pattern
-		handle      Handle
-		ipHandle    IpHandle
+		Url           string
+		ContentType   string
+		Pattern       Pattern
+		handle        Handle
+		ipHandle      IpHandle
+		sessionHandle SessionHandle
 	}
 )
 
@@ -73,12 +77,21 @@ func (r Route) IpRegister(ipHandle IpHandle) {
 	routes.put(r)
 }
 
+func (r Route) SessionRegister(sessionHandle SessionHandle) {
+	r.sessionHandle = sessionHandle
+	routes.put(r)
+}
+
 func (r Route) Handle() Handle {
 	return r.handle
 }
 
 func (r Route) IpHandle() IpHandle {
 	return r.ipHandle
+}
+
+func (r Route) SessionHandle() SessionHandle {
+	return r.sessionHandle
 }
 
 func init() {

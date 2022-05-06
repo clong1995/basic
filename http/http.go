@@ -310,6 +310,7 @@ func (h Server) Run() {
 				}
 
 				var tId int64
+				var tSession int64
 				var ak []byte
 
 				userAuth := &auth{}
@@ -344,6 +345,7 @@ func (h Server) Run() {
 						}
 
 						tId = tk.Id
+						tSession = tk.Session
 						ak = []byte(tk.AccessKeyID())
 
 						//校验签名
@@ -406,8 +408,11 @@ func (h Server) Run() {
 				var result interface{}
 				//检查是否有特殊的handle
 				ipHandle := route.IpHandle()
+				sessionHandle := route.SessionHandle()
 				if ipHandle != nil {
 					result, err = ipHandle(realIp, id.SId.ToString(tId), paramByte)
+				} else if sessionHandle != nil {
+					result, err = sessionHandle(id.SId.ToString(tSession), paramByte)
 				} else {
 					result, err = route.Handle()(id.SId.ToString(tId), paramByte)
 				}
