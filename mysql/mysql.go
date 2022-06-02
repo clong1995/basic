@@ -118,6 +118,11 @@ func argsData(args []interface{}) (sqlArgs string, values []interface{}) {
 		} else {
 			values = append(values, arg)
 		}
+
+		/*else if t.Kind() == reflect.Slice {
+			//TODO 传进来的是数组
+		} */
+
 	}
 	sqlArgs = strings.Repeat("?,", len(values))
 	sqlArgs = strings.TrimRight(sqlArgs, ",")

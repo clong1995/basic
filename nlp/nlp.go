@@ -101,7 +101,7 @@ func (s server) Keywords(text string) []string {
 	for _, item := range entityList {
 		match := false
 		//单独数字
-		match, err = regexp.Match(`^[0-9]*$`, []byte(item.Word))
+		match, err = regexp.Match(`^\d*$`, []byte(item.Word))
 		if err != nil {
 			log.Println(err)
 			return nil

@@ -10,7 +10,7 @@ func TestServer_CreateClient(t *testing.T) {
 		InstanceId:      "post-cn-i7m264v5w0g",
 		AccessKeyId:     "",
 		AccessKeySecret: "",
-	}.CreateServer()
+	}.Run()
 	/*deviceCredential, err := Mqtt.Register("GID_dating", "dating-server")
 	if err != nil {
 		t.Fatal(err)

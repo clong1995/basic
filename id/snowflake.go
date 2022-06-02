@@ -6,7 +6,6 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/clong1995/basic/color"
 	"log"
-	"time"
 )
 
 var (
@@ -77,13 +76,13 @@ func (s server) Test() {
 
 // Info id信息
 // DEPRECATED: the below function will be removed in a future release.
-func (s server) Info(id int64) (map[string]interface{}, error) {
+/*func (s server) Info(id int64) (map[string]interface{}, error) {
 	sId := snowflake.ParseInt64(id)
 	tm := time.Unix(sId.Time()/1000, 0)
 	return map[string]interface{}{
 		"time": tm.Format("2006-01-02 15:04:05"),
 	}, nil
-}
+}*/
 
 func (s Server) Run() {
 	//防止多次创建

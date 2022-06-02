@@ -13,6 +13,7 @@ import (
 	"github.com/clong1995/basic/id"
 	"github.com/clong1995/basic/random"
 	"github.com/clong1995/basic/request"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -136,7 +137,12 @@ func (s *server) WXLogin(code string) (*wXLoginResp, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(resp.Body)
 
 	// 解析http请求中body 数据到我们定义的结构体中
 	wxResp := wXLoginResp{}
