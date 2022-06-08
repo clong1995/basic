@@ -254,7 +254,7 @@ func RespScan(rows *sql.Rows, field, resp interface{}) (err error) {
 		return
 	}
 
-	err = fieldCopy.FieldFrom(resp, field)
+	err = fieldCopy.Copy(resp, field)
 	if err != nil {
 		log.Println(err)
 		return err
