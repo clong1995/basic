@@ -10,24 +10,25 @@ import (
 
 type Token struct {
 	Id        int64
-	Session   int64
-	Timestamp int64
+	session   int64
+	timestamp int64
 }
 
 // Encode 编码
 func (t *Token) Encode() string {
 	//加入时间戳
-	t.Timestamp = time.Now().UnixNano()
+	t.timestamp = time.Now().UnixNano()
 	tsBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(tsBytes, uint64(t.Timestamp))
+	binary.LittleEndian.PutUint64(tsBytes, uint64(t.timestamp))
 
 	//加入id
 	idBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(idBytes, uint64(t.Id))
 
 	//加入session
+	t.session = id.SId.Int()
 	sessionBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(sessionBytes, uint64(id.SId.Int()))
+	binary.LittleEndian.PutUint64(sessionBytes, uint64(t.session))
 
 	//合并
 	tsBytes = append(tsBytes, idBytes...)
@@ -38,7 +39,7 @@ func (t *Token) Encode() string {
 }
 
 func (t *Token) AccessKeyID() string {
-	return cipher.Base64EncryptInt64((t.Timestamp + t.Id) * 2)
+	return cipher.Base64EncryptInt64((t.timestamp + t.Id) * 2)
 }
 
 // Decode 解码
@@ -56,7 +57,7 @@ func (t *Token) Decode(token string) (err error) {
 	if err != nil {
 		return
 	}
-	t.Timestamp = int64(binary.LittleEndian.Uint64(b))
+	t.timestamp = int64(binary.LittleEndian.Uint64(b))
 
 	//提取id
 	_, err = buff.Read(b)
@@ -70,6 +71,14 @@ func (t *Token) Decode(token string) (err error) {
 	if err != nil {
 		return
 	}
-	t.Session = int64(binary.LittleEndian.Uint64(b))
+	t.session = int64(binary.LittleEndian.Uint64(b))
 	return
+}
+
+func (t *Token) Session() int64 {
+	return t.session
+}
+
+func (t *Token) Timestamp() int64 {
+	return t.timestamp
 }

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/clong1995/basic/color"
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis/v9"
 	"log"
 	"time"
 )
@@ -125,27 +125,22 @@ func (s server) HGetStruct(key, field string, v interface{}) (err error) {
 
 //删除过度封装
 /*
-
-
-
-
-
 func (s server) HMSet(key string, fields map[string]interface{}, expiration ...time.Duration) (err error) {
 	//过期时间
 	if len(expiration) == 1 {
 		exp := expiration[0]
-		err = redisClient.Expire(ctx, key, exp).Err()
+		err = redisClient.Expire(context.Background(), key, exp).Err()
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	}
 
-	return redisClient.HMSet(ctx, key, fields).Err()
+	return redisClient.HMSet(context.Background(), key, fields).Err()
 }
 
 func (s server) HMGet(key string, fields ...string) (result []interface{}, err error) {
-	return redisClient.HMGet(ctx, key, fields...).Result()
+	return redisClient.HMGet(context.Background(), key, fields...).Result()
 }
 
 */
@@ -170,9 +165,22 @@ func (s Server) Run() {
 		Password: s.Password, // no password set
 		DB:       s.DB,       // use default DB
 	})
+	/*defer func(redisClient *redis.Client) {
+		err := redisClient.Close()
+		if err != nil {
+			log.Fatal(color.Red, err, color.Reset)
+		}
+	}(redisClient)*/
+
+	_, err := redisClient.Ping(context.Background()).Result()
+	if err != nil {
+		log.Fatal(color.Red, err, color.Reset)
+		return
+	}
+
 	//清空所有数据
 	if s.Flush {
-		_, err := redisClient.FlushDB(context.Background()).Result()
+		_, err = redisClient.FlushDB(context.Background()).Result()
 		if err != nil {
 			log.Fatal(color.Red, err, color.Reset)
 		}

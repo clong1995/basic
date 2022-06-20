@@ -14,7 +14,7 @@ require (
 	github.com/chromedp/chromedp v0.8.2
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/eclipse/paho.mqtt.golang v1.4.1
-	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-redis/redis/v9 v9.0.0-beta.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/jinzhu/copier v0.3.5

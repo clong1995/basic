@@ -345,7 +345,7 @@ func (h Server) Run() {
 						}
 
 						tId = tk.Id
-						tSession = tk.Session
+						tSession = tk.Session()
 						ak = []byte(tk.AccessKeyID())
 
 						//校验签名
@@ -407,8 +407,12 @@ func (h Server) Run() {
 				//执行
 				var result interface{}
 				//检查是否有特殊的handle
+				//携带ip和id的Handle
 				ipHandle := route.IpHandle()
+				//携带session的Handle
 				sessionHandle := route.SessionHandle()
+				//携带id的Handle
+				//Handle
 				if ipHandle != nil {
 					result, err = ipHandle(realIp, id.SId.ToString(tId), paramByte)
 				} else if sessionHandle != nil {

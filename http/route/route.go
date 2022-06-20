@@ -11,7 +11,7 @@ type (
 	// IpHandle 返回IP的签名。ip,id,数据
 	IpHandle func(string, string, []byte) (interface{}, error)
 
-	// SessionHandle 返回session的签名。session,数据
+	// SessionHandle 返回session的签名。id,数据
 	SessionHandle func(string, []byte) (interface{}, error)
 
 	// Route 一个路由的结构
@@ -30,7 +30,7 @@ var routes routeMap
 
 // Put 向路由表注册路由
 func (r routeMap) put(route Route) {
-	if route.handle == nil && route.ipHandle == nil {
+	if route.handle == nil && route.ipHandle == nil && route.sessionHandle == nil {
 		//存在，结束程序
 		log.Panicf("'%s' handle is nill", route.Url)
 	}
