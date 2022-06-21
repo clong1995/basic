@@ -11,7 +11,7 @@ type (
 	// IpHandle 返回IP的签名。ip,id,数据
 	IpHandle func(string, string, []byte) (interface{}, error)
 
-	// SessionHandle 返回session的签名。id,数据
+	// SessionHandle 返回session的签名。session,数据
 	SessionHandle func(string, []byte) (interface{}, error)
 
 	// Route 一个路由的结构

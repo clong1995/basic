@@ -2,6 +2,7 @@ package redis
 
 import (
 	"testing"
+	"time"
 )
 
 func Test_server_HSet(t *testing.T) {
@@ -11,7 +12,7 @@ func Test_server_HSet(t *testing.T) {
 		DB:       0,
 	}.Run()
 
-	err := Redis.HSet("key1", "field1", "value1")
+	err := Redis.HSet("key1", "field1", "value1", time.Hour)
 	if err != nil {
 		t.Log(err)
 		return

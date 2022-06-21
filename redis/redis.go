@@ -65,18 +65,23 @@ func (s server) HGet(key, field string) (bytes []byte, err error) {
 }
 
 func (s server) HSet(key, field string, value interface{}, expiration ...time.Duration) (err error) {
+	cxt := context.Background()
+	if err = redisClient.HSet(cxt, key, field, value).Err(); err != nil {
+		log.Println(err)
+		return
+	}
+
 	//过期时间
 	if len(expiration) == 1 {
 		exp := expiration[0]
-		err = redisClient.Expire(context.Background(), key, exp).Err()
+		err = redisClient.Expire(cxt, key, exp).Err()
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	}
 
-	//查看这个的文档要改
-	return redisClient.HSet(context.Background(), key, field, value).Err()
+	return
 }
 
 func (s server) Exists(key string) (exists bool, err error) {
