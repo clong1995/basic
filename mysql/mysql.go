@@ -24,6 +24,23 @@ var (
 	mysqlDB *sql.DB
 )
 
+func TxAuto(f func(*sql.Rows, *sql.Tx) (err error)) (err error) {
+	//开启事物
+	tx, err := Mysql.TxBegin()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	//结果句柄
+	var rows *sql.Rows
+	//关闭事物
+	defer func() {
+		Mysql.RowsCloseAndTxEnd(rows, tx, err)
+	}()
+
+	return f(rows, tx)
+}
+
 // TxBegin 开启事物
 func (s server) TxBegin() (*sql.Tx, error) {
 	return mysqlDB.Begin()
@@ -69,6 +86,10 @@ func (s server) TxExecProc(tx *sql.Tx, procName string, args ...interface{}) (sq
 
 // TxQueryProc 查询
 func (s server) TxQueryProc(tx *sql.Tx, procName string, args ...interface{}) (*sql.Rows, error) {
+	return TxQueryProc(tx, procName, args)
+}
+
+func TxQueryProc(tx *sql.Tx, procName string, args ...interface{}) (*sql.Rows, error) {
 	ret, values := argsData(args)
 	sqlQuery := fmt.Sprintf("CALL %s (%s)", procName, ret)
 	return tx.Query(sqlQuery, values...)

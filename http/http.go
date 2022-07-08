@@ -179,7 +179,7 @@ func (h Server) Run() {
 		h.MaxHeaderBytes = 1 << 20
 	}
 	if h.Rate == 0 {
-		h.Rate = 3
+		h.Rate = 1
 	}
 	if h.Burst == 0 {
 		h.Burst = 5
@@ -198,8 +198,9 @@ func (h Server) Run() {
 		rate:  h.Rate,
 		burst: h.Burst,
 	}
-
-	iPLimiter.dump()
+	if h.Rate > 0 && h.Burst > 0 {
+		iPLimiter.dump()
+	}
 
 	mux := http.NewServeMux()
 
@@ -215,27 +216,30 @@ func (h Server) Run() {
 				}()
 
 				realIp := ip.XRealIp(r)
-				//阻止高频ip
-				ipItem := iPLimiter.ipLimiter(realIp)
-				if ipItem.count > maxRequestCount { //高频ip
-					errStr := fmt.Sprintf("%s判定为高频请求ip", realIp)
-					fmt.Println(errStr)
-					http.Error(w, errStr, http.StatusTooManyRequests)
-					return
-				}
-				//限流
-				/*err := ipItem.limiter.Wait(context.Background())
-				if err != nil {
-					log.Printf("%s : %s", pattern, err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}*/
-				if !ipItem.limiter.Allow() {
-					//抛弃多余流量
-					errStr := fmt.Sprintf("%s请求过快", realIp)
-					fmt.Println(errStr)
-					http.Error(w, errStr, http.StatusTooManyRequests)
-					return
+
+				if h.Rate > 0 && h.Burst > 0 {
+					//阻止高频ip
+					ipItem := iPLimiter.ipLimiter(realIp)
+					if ipItem.count > maxRequestCount { //高频ip
+						errStr := fmt.Sprintf("%s判定为高频请求ip", realIp)
+						fmt.Println(errStr)
+						http.Error(w, errStr, http.StatusTooManyRequests)
+						return
+					}
+					//限流
+					/*err := ipItem.limiter.Wait(context.Background())
+					if err != nil {
+						log.Printf("%s : %s", pattern, err)
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}*/
+					if !ipItem.limiter.Allow() {
+						//抛弃多余流量
+						errStr := fmt.Sprintf("%s请求过快", realIp)
+						fmt.Println(errStr)
+						http.Error(w, errStr, http.StatusTooManyRequests)
+						return
+					}
 				}
 
 				if h.Web == true {
@@ -532,13 +536,13 @@ func (h Server) Run() {
 	}
 
 	color.Success(fmt.Sprintf(
-		"[http] %s listening http://%s%s ,routes total:%d,ip limit:%g/%ds",
+		"[http] %s listening http://%s%s ,routes total:%d,ip limit:%d/%gs",
 		h.UserAgent,
 		ips[0],
 		h.Addr,
 		len(routeList),
-		h.Rate,
 		h.Burst,
+		h.Rate,
 	))
 	//启动服务
 	server := &http.Server{
