@@ -86,7 +86,7 @@ func (s server) TxExecProc(tx *sql.Tx, procName string, args ...interface{}) (sq
 
 // TxQueryProc 查询
 func (s server) TxQueryProc(tx *sql.Tx, procName string, args ...interface{}) (*sql.Rows, error) {
-	return TxQueryProc(tx, procName, args)
+	return TxQueryProc(tx, procName, args...)
 }
 
 func TxQueryProc(tx *sql.Tx, procName string, args ...interface{}) (*sql.Rows, error) {

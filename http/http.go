@@ -530,9 +530,9 @@ func (h Server) Run() {
 		return
 	}
 	if len(ips) == 0 {
-		err = fmt.Errorf("no ip")
-		log.Println(err)
-		return
+		ips = []string{
+			"127.0.0.1",
+		}
 	}
 
 	color.Success(fmt.Sprintf(
