@@ -69,11 +69,12 @@ type (
 	auth struct {
 		Token    string `json:"t"`
 		DeviceId string `json:"d"`
+		Version  int64  `json:"v"`
 	}
 
 	//response 返回数据
 	response struct {
-		Version int         `json:"version"`
+		Version int64       `json:"version"`
 		State   string      `json:"state"`
 		Data    interface{} `json:"data"`
 	}
@@ -313,58 +314,70 @@ func (h Server) Run() {
 					}
 				}
 
+				if len(paramByte) == 0 {
+					errStr := fmt.Sprintf("%s : %s", pattern, "body为空")
+					fmt.Println(errStr)
+					http.Error(w, errStr, http.StatusNoContent)
+					return
+				}
+
 				var tId int64
 				var tSession int64
 				var ak []byte
 
 				userAuth := &auth{}
+				//提取 token、deviceId、version
+				err = json.Unmarshal(paramByte, userAuth)
+				if err != nil {
+					errStr := fmt.Sprintf("%s : %s", pattern, err)
+					fmt.Println(errStr)
+					http.Error(w, errStr, http.StatusInternalServerError)
+					return
+				}
 
+				//判断版本
+				if userAuth.Version < route.Pattern.Version {
+					//客户端版本太低
+					errStr := fmt.Sprintf(
+						"client version is %d, server version is %d. version is too low.",
+						userAuth.Version, route.Pattern.Version,
+					)
+					fmt.Println(errStr)
+					http.Error(w, errStr, http.StatusGone)
+					return
+				}
+
+				//认证
 				if route.Pattern.Auth == Enable { //启用认证
-					if len(paramByte) > 0 {
-						//提取 token、deviceId
-						//a := &auth{}
-						err = json.Unmarshal(paramByte, userAuth)
-						if err != nil {
-							errStr := fmt.Sprintf("%s : %s", pattern, err)
-							fmt.Println(errStr)
-							http.Error(w, errStr, http.StatusInternalServerError)
-							return
-						}
-
-						if userAuth.Token == "" {
-							errStr := fmt.Sprintf("%s : %s", pattern, "缺少令牌")
-							fmt.Println(errStr)
-							http.Error(w, errStr, http.StatusNotAcceptable)
-							return
-						}
-
-						//提起令牌内容
-						tk := token.Token{}
-						err = tk.Decode(userAuth.Token)
-						if err != nil {
-							errStr := fmt.Sprintf("%s : %s", pattern, "令牌错误")
-							fmt.Println(errStr)
-							http.Error(w, errStr, http.StatusNotAcceptable)
-							return
-						}
-
-						tId = tk.Id
-						tSession = tk.Session()
-						ak = []byte(tk.AccessKeyID())
-
-						//校验签名
-						if !cipher.CheckSign(sig, paramByte, ak) {
-							errStr := fmt.Sprintf("%s : %s", pattern, "指纹检验失败")
-							fmt.Println(errStr)
-							http.Error(w, errStr, http.StatusNotAcceptable)
-							return
-						}
-					} else {
-						errStr := fmt.Sprintf("%s : %s", pattern, "body为空")
+					if userAuth.Token == "" {
+						errStr := fmt.Sprintf("%s : %s", pattern, "缺少令牌")
 						fmt.Println(errStr)
-						http.Error(w, errStr, http.StatusNoContent)
+						http.Error(w, errStr, http.StatusNotAcceptable)
 						return
 					}
+
+					//提起令牌内容
+					tk := token.Token{}
+					err = tk.Decode(userAuth.Token)
+					if err != nil {
+						errStr := fmt.Sprintf("%s : %s", pattern, "令牌错误")
+						fmt.Println(errStr)
+						http.Error(w, errStr, http.StatusNotAcceptable)
+						return
+					}
+
+					tId = tk.Id
+					tSession = tk.Session()
+					ak = []byte(tk.AccessKeyID())
+
+					//校验签名
+					if !cipher.CheckSign(sig, paramByte, ak) {
+						errStr := fmt.Sprintf("%s : %s", pattern, "指纹检验失败")
+						fmt.Println(errStr)
+						http.Error(w, errStr, http.StatusNotAcceptable)
+						return
+					}
+
 				}
 
 				//var jsonErr error
