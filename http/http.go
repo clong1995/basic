@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -48,7 +49,7 @@ body: {
 
 const (
 	contentSign     = "content-sign"   //指纹
-	maxRequestCount = 1200             //存活周期内的最大请求数 1200
+	maxRequestCount = 2000             //存活周期内的最大请求数 1200
 	dumpPeriod      = 10 * time.Minute //清理周期 10
 	maxAliveTime    = 10 * time.Minute //存活周期 10
 )
@@ -89,7 +90,7 @@ type (
 	iPRateLimiter struct {
 		ips   map[string]*iPItem
 		mu    *sync.RWMutex
-		rate  rate.Limit //速率
+		rate  rate.Limit //每秒像桶中放入的令牌数量
 		burst int        //令牌桶大小
 	}
 )
@@ -120,12 +121,15 @@ func (i *iPRateLimiter) dump() {
 				//log.Println("触发清理")
 				i.mu.Lock()
 				for k, v := range i.ips {
-					//清除不活跃ip
-					if v.lastDate.Add(maxAliveTime).Before(now) {
+					//判断是否在存活周期内
+					if v.lastDate.Add(maxAliveTime).Before(now) { //不再周期内
+						//清除不活跃ip
 						delete(i.ips, k)
+					} else { //在周期内
+						//初始高频ip为0
+						v.count = 0
 					}
-					//初始高频ip为0
-					v.count = 0
+
 				}
 				i.mu.Unlock()
 			}
@@ -180,10 +184,10 @@ func (h Server) Run() {
 		h.MaxHeaderBytes = 1 << 20
 	}
 	if h.Rate == 0 {
-		h.Rate = 1
+		h.Rate = 10
 	}
 	if h.Burst == 0 {
-		h.Burst = 5
+		h.Burst = 15
 	}
 	if h.ReadTimeout == 0 {
 		h.ReadTimeout = 5
@@ -262,19 +266,31 @@ func (h Server) Run() {
 				}
 
 				//处理header
-				header := r.Header
+				//header := r.Header
+				userAgent := r.Header.Get("User-Agent")
 				if h.UserAgent != "" && route.Pattern.UserAgent == Enable {
-					acc := header.Get("User-Agent")
-					if acc != "dev tool" && acc != h.UserAgent {
-						errStr := fmt.Sprintf("%s : %s", pattern, "User-Agent 错误")
-						fmt.Println(errStr)
-						http.Error(w, errStr, http.StatusForbidden)
-						return
+					if userAgent != "dev tool" {
+						agent := false
+						if strings.HasSuffix(h.UserAgent, "-*") { //包含通配符
+							ua := h.UserAgent[0 : len(h.UserAgent)-2]
+							agent = !strings.HasPrefix(userAgent, ua)
+						} else {
+							agent = userAgent != h.UserAgent
+						}
+
+						if agent {
+							errStr := fmt.Sprintf("%s : %s", pattern, "User-Agent 错误")
+							fmt.Println(errStr)
+							http.Error(w, errStr, http.StatusForbidden)
+							return
+						}
+
 					}
+
 				}
 
 				//检查签名
-				sig := header.Get(contentSign)
+				sig := r.Header.Get(contentSign)
 				if route.Pattern.Auth == Enable {
 					//有认证必须要校验签名
 					if sig == "" {
@@ -428,12 +444,16 @@ func (h Server) Run() {
 				ipHandle := route.IpHandle()
 				//携带session的Handle
 				sessionHandle := route.SessionHandle()
-				//携带id的Handle
+				//携带User-Agent的Handle
+				userAgentHandle := route.UserAgentHandle()
+
 				//Handle
-				if ipHandle != nil {
-					result, err = ipHandle(realIp, id.SId.ToString(tId), paramByte)
+				if userAgentHandle != nil {
+					result, err = userAgentHandle(userAgent, id.SId.ToString(tId), paramByte)
 				} else if sessionHandle != nil {
 					result, err = sessionHandle(id.SId.ToString(tSession), paramByte)
+				} else if ipHandle != nil {
+					result, err = ipHandle(realIp, id.SId.ToString(tId), paramByte)
 				} else {
 					result, err = route.Handle()(id.SId.ToString(tId), paramByte)
 				}

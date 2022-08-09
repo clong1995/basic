@@ -14,14 +14,18 @@ type (
 	// SessionHandle 返回session的签名。session,数据
 	SessionHandle func(string, []byte) (interface{}, error)
 
+	// UserAgentHandle 返回user-agent的签名。agent,id,数据
+	UserAgentHandle func(string, string, []byte) (interface{}, error)
+
 	// Route 一个路由的结构
 	Route struct {
-		Url           string
-		ContentType   string
-		Pattern       Pattern
-		handle        Handle
-		ipHandle      IpHandle
-		sessionHandle SessionHandle
+		Url             string
+		ContentType     string
+		Pattern         Pattern
+		handle          Handle
+		ipHandle        IpHandle
+		sessionHandle   SessionHandle
+		userAgentHandle UserAgentHandle
 	}
 )
 
@@ -30,7 +34,10 @@ var routes routeMap
 
 // Put 向路由表注册路由
 func (r routeMap) put(route Route) {
-	if route.handle == nil && route.ipHandle == nil && route.sessionHandle == nil {
+	if route.handle == nil &&
+		route.ipHandle == nil &&
+		route.sessionHandle == nil &&
+		route.userAgentHandle == nil {
 		//存在，结束程序
 		log.Panicf("'%s' handle is nill", route.Url)
 	}
@@ -82,6 +89,11 @@ func (r Route) SessionRegister(sessionHandle SessionHandle) {
 	routes.put(r)
 }
 
+func (r Route) UserAgentRegister(userAgentHandle UserAgentHandle) {
+	r.userAgentHandle = userAgentHandle
+	routes.put(r)
+}
+
 func (r Route) Handle() Handle {
 	return r.handle
 }
@@ -92,6 +104,10 @@ func (r Route) IpHandle() IpHandle {
 
 func (r Route) SessionHandle() SessionHandle {
 	return r.sessionHandle
+}
+
+func (r Route) UserAgentHandle() UserAgentHandle {
+	return r.userAgentHandle
 }
 
 func init() {
